@@ -5,7 +5,7 @@ import {
 } from '@selfxyz/core';
 import { kv } from '@vercel/kv';
 import { SelfApp } from '@selfxyz/qrcode';
-import { companyUserKey } from '@/lib/utils';
+import { companyProofKey, companyUserKey } from '@/lib/utils';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
@@ -130,6 +130,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           filteredSubject.expiry_date = "Not disclosed";
         }
 
+        const isProofExists = await kv.hget(companyProofKey(companyId), proof);
+        if (isProofExists) {
+          return res.status(400).json({ message: 'User has already verified for another address' });
+        }
+
+        await kv.hset(companyProofKey(companyId), { [proof]: true });
         await kv.hset(companyUserKey(companyId), { [userId]: true });
 
         res.status(200).json({
