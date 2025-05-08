@@ -5,7 +5,7 @@ import {
 } from '@selfxyz/core';
 import { kv } from '@vercel/kv';
 import { SelfApp } from '@selfxyz/qrcode';
-import { companyProofKey, companyUserKey } from '@/lib/utils';
+import { companyProofKey, companyUserKey, getApiUrl } from '@/lib/utils';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
@@ -88,7 +88,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const configuredVerifier = new SelfBackendVerifier(
         "self-playground",
-        "https://playground.self.xyz",
+        getApiUrl(),
         "uuid",
         false
       );
