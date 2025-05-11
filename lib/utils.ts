@@ -20,3 +20,7 @@ export function companyUserKey(companyId: string) {
 export function companyProofKey(companyId: string) {
   return `${companyId}:proofs`;
 }
+
+export function enableMockPassport() {
+  return process.env.ENABLE_MOCK_PASSPORT === "true";
+}

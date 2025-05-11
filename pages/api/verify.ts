@@ -1,16 +1,19 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import {
   SelfBackendVerifier,
-  countryCodes
+  countryCodes,
+  getUserIdentifier
 } from '@selfxyz/core';
 import { kv } from '@vercel/kv';
 import { SelfApp } from '@selfxyz/qrcode';
-import { companyProofKey, companyUserKey, getApiUrl } from '@/lib/utils';
+import { companyProofKey, companyUserKey, enableMockPassport, getApiUrl } from '@/lib/utils';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     try {
-      const { proof, publicSignals, userId } = req.body;
+      const { proof, publicSignals } = req.body;
+
+      const userId = await getUserIdentifier(publicSignals);
 
       if (!userId) {
         return res.status(400).json({ message: 'User ID is required' });
@@ -87,10 +90,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       const configuredVerifier = new SelfBackendVerifier(
-        "self-playground",
+        "ezkyc",
         getApiUrl(),
         "uuid",
-        false
+        enableMockPassport()
       );
 
       if (minimumAge !== undefined) {
