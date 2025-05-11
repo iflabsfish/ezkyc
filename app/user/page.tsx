@@ -27,8 +27,8 @@ export default function UserPage() {
     if (companyOptions) {
       if (verificationStatus === "verifying") {
         const app = new SelfAppBuilder({
-          appName: "Self Playground",
-          scope: "self-playground",
+          appName: "ezkyc",
+          scope: "ezkyc",
           endpoint: getVerifierUrl(),
           endpointType: "https",
           logoBase64: "https://i.imgur.com/Rz8B3s7.png",
