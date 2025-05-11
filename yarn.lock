@@ -1186,10 +1186,10 @@
   resolved "https://registry.yarnpkg.com/@radix-ui/rect/-/rect-1.1.1.tgz#78244efe12930c56fd255d7923865857c41ac8cb"
   integrity sha512-HPwpGIzkl28mWyZqG52jiqDJ12waP11Pa1lGoiyUkIEuMLBP0oeK/C89esbXrxsky5we7dfd8U58nm0SgAWpVw==
 
-"@selfxyz/core@^0.0.21":
-  version "0.0.21"
-  resolved "https://registry.yarnpkg.com/@selfxyz/core/-/core-0.0.21.tgz#c6d71986728ca151a4112c67e8e688390eeb0739"
-  integrity sha512-7y/+fWlADfZQmPA7sarRvHEsI+PMhE+sTRMlP8lH+IBy9/kbNBCcziIHsUqnK3RIEx+SJtkilzWbOkqenZ5Nwg==
+"@selfxyz/core@^0.0.25":
+  version "0.0.25"
+  resolved "https://registry.yarnpkg.com/@selfxyz/core/-/core-0.0.25.tgz#8b4fad354e1229d8f83f6c1ac3aec70eb339476c"
+  integrity sha512-yZfcLag03Mf5z7MlG4VUaaT+KiMGXDbh+BUmEU73oG+AYpo8nOh+QSbLGPxqmrK0PR43AepACeqqqrXHfeXTtQ==
   dependencies:
     "@types/react" "^18.3.4"
     "@types/react-dom" "^18.3.0"
@@ -1204,10 +1204,10 @@
     snarkjs "^0.7.4"
     uuid "^11.1.0"
 
-"@selfxyz/qrcode@^0.0.17":
-  version "0.0.17"
-  resolved "https://registry.yarnpkg.com/@selfxyz/qrcode/-/qrcode-0.0.17.tgz#8827b41717950e1dc9181fc4856adc171edd7341"
-  integrity sha512-+cTocwGVIMFeDaNabxZrcx+1GfqnD96gFPRuE+fC7dtH02TniAVf5eGPWgLzMHLoBrFsvcy57es/8jZlwuhw/g==
+"@selfxyz/qrcode@^0.0.19":
+  version "0.0.19"
+  resolved "https://registry.yarnpkg.com/@selfxyz/qrcode/-/qrcode-0.0.19.tgz#c8d62e2a12e810d4cfa312e3554a0fed55c0795e"
+  integrity sha512-blqfkG6iu5olofT4wrshgYDj5H2Zp/45mWVlwj697oVAl+VOQkYwoYioJABVm/85pRnvdpeAULB3UJ39/+Gaig==
   dependencies:
     "@types/react" "^18.3.4"
     "@types/react-dom" "^18.3.0"
