@@ -1,26 +1,31 @@
-import React, { useState } from "react";
-import { LucideIcon } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { Calendar } from "lucide-react";
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface DatePickerProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
   label?: string;
   error?: string;
   hint?: string;
-  leftIcon?: LucideIcon;
-  rightIcon?: LucideIcon;
   helperText?: string;
 }
 
-export function Input({
+export function DatePicker({
   label,
   error,
   hint,
-  leftIcon: LeftIcon,
-  rightIcon: RightIcon,
-  className = "",
   helperText,
+  className = "",
   ...props
-}: InputProps) {
+}: DatePickerProps) {
   const [isFocused, setIsFocused] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleContainerClick = () => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.showPicker();
+    }
+  };
 
   return (
     <div>
@@ -33,24 +38,30 @@ export function Input({
           {props.required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
-      <div className="relative rounded-md">
-        {LeftIcon && (
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <LeftIcon
-              className={`h-5 w-5 ${
-                isFocused ? "text-indigo-500" : "text-gray-400"
-              } transition-colors duration-200`}
-            />
-          </div>
-        )}
+      <div
+        className={`relative rounded-md ${
+          isFocused ? "ring-2 ring-indigo-100" : ""
+        } cursor-pointer`}
+        onClick={handleContainerClick}
+      >
+        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <Calendar
+            className={`h-5 w-5 ${
+              isFocused ? "text-indigo-500" : "text-gray-400"
+            } transition-colors duration-200`}
+          />
+        </div>
         <input
+          ref={inputRef}
+          type="date"
           className={`
-            block w-full rounded-md border-gray-300 shadow-sm 
-            focus:border-indigo-500 focus:ring-indigo-500 text-base
+            block w-full pl-12 rounded-md border-gray-300 
+            focus:border-indigo-500 focus:ring-0 text-base
             py-3 px-4
             transition-all duration-200 ease-in-out
-            ${LeftIcon ? "pl-10" : ""}
-            ${RightIcon ? "pr-10" : ""}
+            hover:border-gray-400
+            bg-white
+            cursor-pointer
             ${
               error
                 ? "border-red-300 text-red-900 placeholder-red-300 focus:border-red-500 focus:ring-red-500"
@@ -58,23 +69,14 @@ export function Input({
                 ? "border-indigo-400"
                 : ""
             }
-            hover:border-gray-400
             ${className}
           `}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           {...props}
         />
-        {RightIcon && (
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-            <RightIcon
-              className={`h-5 w-5 ${
-                isFocused ? "text-indigo-500" : "text-gray-400"
-              } transition-colors duration-200`}
-            />
-          </div>
-        )}
       </div>
+
       {error && (
         <p className="mt-1 text-sm text-red-600 flex items-start">
           <svg
@@ -94,7 +96,12 @@ export function Input({
           <span>{error}</span>
         </p>
       )}
-      {hint && !error && <p className="mt-2 text-sm text-gray-500">{hint}</p>}
+      {hint && !error && (
+        <p className="mt-2 text-sm text-gray-500 flex items-center">
+          <Calendar className="h-3 w-3 mr-1 text-gray-400" />
+          <span>{hint}</span>
+        </p>
+      )}
       {helperText && !error && !hint && (
         <p className="mt-2 text-xs text-gray-400 italic">{helperText}</p>
       )}

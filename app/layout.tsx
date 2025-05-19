@@ -1,33 +1,33 @@
-import type React from "react"
-import { Inter } from "next/font/google"
-import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import { Toaster } from "@/components/ui/toaster"
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { Providers } from "./providers";
+import { config } from "@/config";
+import { cookieToInitialState } from "@account-kit/core";
+import { headers } from "next/headers";
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ["latin"] });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Privacy KYC",
   description: "Zero-knowledge KYC solution",
-    generator: 'v0.dev'
-}
+};
 
 export default function RootLayout({
   children,
-}: {
-  children: React.ReactNode
-}) {
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const initialState = cookieToInitialState(
+    config,
+    headers().get("cookie") ?? undefined
+  );
+
   return (
     <html lang="en">
-      <head>
-        <script async src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-      </head>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          {children}
-          <Toaster />
-        </ThemeProvider>
+        <Providers initialState={initialState}>{children}</Providers>
       </body>
     </html>
-  )
+  );
 }

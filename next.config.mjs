@@ -1,14 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
+  webpack: (config) => {
+    config.externals.push("pino-pretty", "encoding");
+    return config;
   },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  images: {
-    unoptimized: true,
-  },
-}
+};
 
-export default nextConfig
+export default nextConfig;
