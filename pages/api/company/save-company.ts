@@ -26,7 +26,7 @@ export default async function handler(
     }
 
     const company: Company = {
-      id,
+      id: id.toLowerCase(),
       name,
       logo: logo || undefined,
       website: website || undefined,
@@ -34,7 +34,7 @@ export default async function handler(
       createdAt: Date.now(),
     };
 
-    await kv.set(`company:${id}`, company);
+    await kv.set(`company:${id.toLowerCase()}`, company);
 
     return res.status(201).json({
       success: true,

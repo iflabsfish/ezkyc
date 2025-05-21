@@ -26,14 +26,14 @@ export default async function handler(
     }
 
     const user: User = {
-      id,
+      id: id.toLowerCase(),
       name,
       email: email || undefined,
       type: "user",
       createdAt: Date.now(),
     };
 
-    await kv.set(`user:${id}`, user);
+    await kv.set(`user:${id.toLowerCase()}`, user);
 
     return res.status(201).json({
       success: true,

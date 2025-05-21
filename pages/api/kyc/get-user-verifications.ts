@@ -22,7 +22,7 @@ export default async function handler(
       return res.status(400).json({ message: "User ID is required" });
     }
 
-    const verificationIds = await kv.smembers(`user:kyc:${userId}`);
+    const verificationIds = await kv.smembers(`user:kyc:${userId.toLowerCase()}`);
 
     if (!verificationIds || verificationIds.length === 0) {
       return res.status(200).json({

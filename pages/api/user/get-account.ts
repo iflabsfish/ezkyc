@@ -17,7 +17,7 @@ export default async function handler(
       return res.status(400).json({ message: "User ID is required" });
     }
 
-    const userAccount = await kv.get<User>(`user:${id}`);
+    const userAccount = await kv.get<User>(`user:${id.toLowerCase()}`);
     if (userAccount) {
       return res.status(200).json({
         success: true,
@@ -26,7 +26,7 @@ export default async function handler(
       });
     }
 
-    const companyAccount = await kv.get<Company>(`company:${id}`);
+    const companyAccount = await kv.get<Company>(`company:${id.toLowerCase()}`);
     if (companyAccount) {
       return res.status(200).json({
         success: true,

@@ -63,7 +63,7 @@ export default async function handler(
 
     const verification: UserKycVerification = {
       id: uuidv4(),
-      userId: verificationData.userId,
+      userId: verificationData.userId.toLowerCase(),
       kycFlowId: verificationData.kycFlowId,
       blockchainAddress: verificationData.blockchainAddress,
       qrcodeData: verificationData.qrcodeData,
