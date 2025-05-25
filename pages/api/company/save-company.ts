@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { kv } from "@vercel/kv";
 import { Company } from "@/types";
+import { verifyJwt } from "@/lib/api/jwt";
 
 export default async function handler(
   req: NextApiRequest,
@@ -11,11 +12,18 @@ export default async function handler(
   }
 
   try {
-    const { id, name, logo, website, type } = req.body;
-
-    if (!id) {
-      return res.status(400).json({ message: "User ID is required" });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Missing or invalid token" });
     }
+    const token = authHeader.split(" ")[1];
+    const payload = verifyJwt(token);
+    if (!payload) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+    const accountId = payload.accountId;
+
+    const { name, logo, website, type } = req.body;
 
     if (!name) {
       return res.status(400).json({ message: "Company name is required" });
@@ -26,7 +34,7 @@ export default async function handler(
     }
 
     const company: Company = {
-      id: id.toLowerCase(),
+      id: accountId,
       name,
       logo: logo || undefined,
       website: website || undefined,
@@ -34,7 +42,7 @@ export default async function handler(
       createdAt: Date.now(),
     };
 
-    await kv.set(`company:${id.toLowerCase()}`, company);
+    await kv.set(`company:${accountId}`, company);
 
     return res.status(201).json({
       success: true,

@@ -14,15 +14,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, X } from "lucide-react";
 import SelfQRcodeWrapper, { SelfApp, SelfAppBuilder } from "@selfxyz/qrcode";
+import { useAuth } from "@/hooks/useAuth";
 
 interface KycVerificationListProps {
-  userId: string;
   verifications?: UserKycVerificationWithFlow[];
   onDelete?: (id: string) => void;
 }
 
 export function KycVerificationList({
-  userId,
   verifications: externalVerifications,
   onDelete,
 }: KycVerificationListProps) {
@@ -52,6 +51,8 @@ export function KycVerificationList({
     setQrIndex(null);
   };
 
+  const { fetchWithToken } = useAuth();
+
   useEffect(() => {
     if (externalVerifications) {
       setVerifications(externalVerifications);
@@ -63,12 +64,12 @@ export function KycVerificationList({
         setIsLoading(true);
         setError(null);
 
-        const response = await fetch(
-          `/api/kyc/get-user-verifications?userId=${encodeURIComponent(userId)}`
+        const response = await fetchWithToken(
+          "/api/kyc/get-user-verifications"
         );
-        const data = await response.json();
+        const data = await response?.json();
 
-        if (!response.ok) {
+        if (!response?.ok) {
           throw new Error(data.message || "Failed to fetch KYC verifications");
         }
 
@@ -84,7 +85,7 @@ export function KycVerificationList({
     };
 
     fetchVerifications();
-  }, [userId, externalVerifications]);
+  }, [externalVerifications, fetchWithToken]);
 
   const handleDelete = async (id: string) => {
     if (!confirmingId) {
@@ -95,18 +96,16 @@ export function KycVerificationList({
     try {
       setDeletingId(id);
 
-      const response = await fetch(
-        `/api/kyc/delete-verification?id=${encodeURIComponent(
-          id
-        )}&userId=${encodeURIComponent(userId)}`,
+      const response = await fetchWithToken(
+        `/api/kyc/delete-verification?id=${encodeURIComponent(id)}`,
         {
           method: "DELETE",
         }
       );
 
-      const data = await response.json();
+      const data = await response?.json();
 
-      if (!response.ok) {
+      if (!response?.ok) {
         throw new Error(data.message || "Failed to delete verification");
       }
 

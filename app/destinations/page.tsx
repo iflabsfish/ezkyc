@@ -1,19 +1,20 @@
 "use client";
 import { Header, Footer } from "@/components";
 import { DestinationCards } from "../components/home/DestinationCards";
-import { useUser } from "@account-kit/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useUserInfo } from "@/hooks";
+import { useAuth } from "@/hooks/useAuth";
+import { Loading } from "@/components/ui/Loading";
 
 export default function DestinationsPage() {
-  const user = useUser();
+  const { accountId } = useAuth();
   const router = useRouter();
   const { isLoading, account, accountType, error } = useUserInfo();
 
   useEffect(() => {
     // If the user is not logged in, redirect to the home page
-    if (!user) {
+    if (!accountId) {
       router.push("/");
       return;
     }
@@ -26,20 +27,15 @@ export default function DestinationsPage() {
         router.push("/company/dashboard");
       }
     }
-  }, [user, isLoading, account, accountType, router]);
+  }, [accountId, isLoading, account, accountType, router]);
 
   // If the user is not logged in or information is loading, do not display content
-  if (!user || isLoading) {
+  if (!accountId || isLoading) {
     return (
       <div className="flex flex-col min-h-screen bg-gradient-to-b from-indigo-50 to-white">
         <Header />
         <main className="flex-grow container mx-auto px-4 py-16 flex items-center justify-center">
-          {isLoading && (
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Loading...</p>
-            </div>
-          )}
+          {isLoading && <Loading text="Loading..." />}
         </main>
         <Footer />
       </div>
@@ -55,7 +51,7 @@ export default function DestinationsPage() {
           <h1 className="text-3xl font-bold text-gray-900">
             Welcome,{" "}
             <span className="text-indigo-600">
-              {user.email || "Anonymous User"}
+              {account?.name || "Anonymous User"}
             </span>
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl">

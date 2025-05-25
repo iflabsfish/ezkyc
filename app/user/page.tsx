@@ -1,67 +1,83 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@account-kit/react";
 import { Header, Footer } from "@/components";
 import { User, Mail, AlertCircle, ArrowRight } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useAuthUserContext } from "../context/AuthUserContext";
+import { User as UserType } from "@/types";
 
 export default function UserPage() {
   const router = useRouter();
-  const user = useUser();
+  const { accountId } = useAuth();
+  const { fetchWithToken } = useAuth();
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
+  const { setUserInfo } = useAuthUserContext();
 
   useEffect(() => {
-    if (!user) {
+    if (!accountId) {
       router.push("/");
     }
-  }, [user, router]);
+  }, [accountId, router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
 
-    if (!username.trim()) {
-      setError("Username is required");
-      return;
-    }
-
-    if (!user) {
-      router.push("/");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      const response = await fetch("/api/user/save-user", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: user.userId,
-          name: username,
-          email: email || undefined,
-          type: "user",
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Save failed");
+      if (!username.trim()) {
+        setError("Username is required");
+        return;
       }
 
-      router.push("/user/dashboard");
-    } catch (err) {
-      console.error(err);
-      setError((err as Error).message || "Submission failed, please try again");
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (!accountId) {
+        router.push("/");
+        return;
+      }
+
+      try {
+        setLoading(true);
+
+        const response = await fetchWithToken("/api/user/save-user", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: username,
+            email: email || undefined,
+            type: "user",
+          }),
+        });
+
+        const data = await response?.json();
+
+        if (!response?.ok) {
+          throw new Error(data.message || "Save failed");
+        }
+        const userInfo = data.user as UserType;
+        if (userInfo) {
+          setUserInfo({
+            isLoading: false,
+            error: null,
+            account: userInfo,
+            accountType: "user",
+          });
+        }
+        router.push("/user/dashboard");
+      } catch (err) {
+        console.error(err);
+        setError(
+          (err as Error).message || "Submission failed, please try again"
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [accountId, router, fetchWithToken, username, email]
+  );
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-indigo-50 to-white">
@@ -134,7 +150,7 @@ export default function UserPage() {
                     />
                   </div>
                   <p className="mt-1 text-xs text-gray-500">
-                    We'll never share your email with anyone else.
+                    We&apos;ll never share your email with anyone else.
                   </p>
                 </div>
 

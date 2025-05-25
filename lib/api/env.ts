@@ -17,3 +17,11 @@ export function getVerifierUrl() {
 export function enableMockPassport() {
   return process.env.ENABLE_MOCK_PASSPORT === "true";
 }
+
+export function getJwtSecret() {
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+    throw new Error("JWT_SECRET is not set");
+  }
+  return jwtSecret;
+}

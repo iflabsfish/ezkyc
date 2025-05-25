@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { kv } from "@vercel/kv";
 import { UserKycVerification } from "@/types";
+import { verifyJwt } from "@/lib/api/jwt";
 
 export default async function handler(
   req: NextApiRequest,
@@ -11,14 +12,21 @@ export default async function handler(
   }
 
   try {
-    const { id, userId } = req.query;
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Missing or invalid token" });
+    }
+    const token = authHeader.split(" ")[1];
+    const payload = verifyJwt(token);
+    if (!payload) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+    const accountId = payload.accountId;
+
+    const { id } = req.query;
 
     if (!id || typeof id !== "string") {
       return res.status(400).json({ message: "Missing verification ID" });
-    }
-
-    if (!userId || typeof userId !== "string") {
-      return res.status(400).json({ message: "Missing user ID" });
     }
 
     const verification = await kv.get<UserKycVerification>(
@@ -29,7 +37,7 @@ export default async function handler(
       return res.status(404).json({ message: "KYC verification not found" });
     }
 
-    if (verification.userId !== userId) {
+    if (verification.userId !== accountId) {
       return res
         .status(403)
         .json({ message: "Not authorized to delete this verification" });

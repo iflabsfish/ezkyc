@@ -48,7 +48,6 @@ export interface KycFlow {
  * Create KYC flow request type
  */
 export interface CreateKycFlowRequest {
-  userId: string;
   projectName: string;
   startDate: number;
   endDate: number | null;
@@ -56,6 +55,7 @@ export interface CreateKycFlowRequest {
 }
 
 export type KycFlowInDB = CreateKycFlowRequest & {
+  userId: string;
   id: string;
   isDeleted: boolean;
   createdAt: number;

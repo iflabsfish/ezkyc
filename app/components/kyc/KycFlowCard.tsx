@@ -12,6 +12,7 @@ import {
   Check,
   Fingerprint,
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface KycFlowCardProps {
   flow: KycFlow;
@@ -22,6 +23,7 @@ export function KycFlowCard({ flow, onDelete }: KycFlowCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const { fetchWithToken } = useAuth();
 
   const handleDelete = async () => {
     if (!showConfirmDelete) {
@@ -32,11 +34,14 @@ export function KycFlowCard({ flow, onDelete }: KycFlowCardProps) {
     try {
       setIsDeleting(true);
 
-      const response = await fetch(`/api/kyc/delete-flow?id=${flow.id}`, {
-        method: "DELETE",
-      });
+      const response = await fetchWithToken(
+        `/api/kyc/delete-flow?id=${flow.id}`,
+        {
+          method: "DELETE",
+        }
+      );
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error("Failed to delete KYC flow");
       }
 

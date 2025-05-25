@@ -7,6 +7,7 @@ import {
   CreateUserKycVerificationRequest,
   KycFlowInDB,
 } from "@/types";
+import { verifyJwt } from "@/lib/api/jwt";
 
 export default async function handler(
   req: NextApiRequest,
@@ -17,11 +18,20 @@ export default async function handler(
   }
 
   try {
-    const verificationData: CreateUserKycVerificationRequest = req.body;
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Missing or invalid token" });
+    }
+    const token = authHeader.split(" ")[1];
+    const payload = verifyJwt(token);
+    if (!payload) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+    const accountId = payload.accountId;
 
+    const verificationData: CreateUserKycVerificationRequest = req.body;
     if (
       !verificationData ||
-      !verificationData.userId ||
       !verificationData.kycFlowId ||
       !verificationData.blockchainAddress ||
       !verificationData.qrcodeData
@@ -41,9 +51,7 @@ export default async function handler(
       return res.status(400).json({ message: "KYC flow is no longer active" });
     }
 
-    const userVerifications = await kv.smembers(
-      `user:kyc:${verificationData.userId}`
-    );
+    const userVerifications = await kv.smembers(`user:kyc:${accountId}`);
 
     for (const verificationId of userVerifications) {
       const verification = await kv.get<UserKycVerification>(
@@ -63,7 +71,7 @@ export default async function handler(
 
     const verification: UserKycVerification = {
       id: uuidv4(),
-      userId: verificationData.userId.toLowerCase(),
+      userId: accountId,
       kycFlowId: verificationData.kycFlowId,
       blockchainAddress: verificationData.blockchainAddress,
       qrcodeData: verificationData.qrcodeData,
@@ -75,7 +83,7 @@ export default async function handler(
 
     await kv.set(`kyc:verification:${verification.id}`, verification);
 
-    await kv.sadd(`user:kyc:${verification.userId}`, verification.id);
+    await kv.sadd(`user:kyc:${accountId}`, verification.id);
 
     await kv.sadd(
       `kyc:flow:verifications:${verification.kycFlowId}`,

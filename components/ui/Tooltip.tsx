@@ -4,9 +4,11 @@ import { createPortal } from "react-dom";
 export function Tooltip({
   children,
   content,
+  showTip,
 }: {
   children: React.ReactNode;
   content: React.ReactNode;
+  showTip: boolean;
 }) {
   const [show, setShow] = useState(false);
   const [coords, setCoords] = useState<{ left: number; top: number } | null>(
@@ -67,7 +69,8 @@ export function Tooltip({
       onBlur={() => setShow(false)}
     >
       {children}
-      {show &&
+      {showTip &&
+        show &&
         coords &&
         createPortal(
           <span

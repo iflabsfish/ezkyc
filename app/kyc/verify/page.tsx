@@ -3,19 +3,19 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Header, Footer } from "@/components";
-import { useUser } from "@account-kit/react";
-import { useUserInfo } from "@/hooks";
+import { useAuth, useUserInfo } from "@/hooks";
 import { KycVerificationForm } from "@/app/components/kyc/KycVerificationForm";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { Loading } from "@/components/ui/Loading";
 
 export default function KycVerifyPage() {
   const router = useRouter();
-  const user = useUser();
+  const { accountId } = useAuth();
   const { isLoading, account, accountType } = useUserInfo();
 
   useEffect(() => {
-    if (!user) {
+    if (!accountId) {
       router.push("/");
       return;
     }
@@ -23,19 +23,14 @@ export default function KycVerifyPage() {
     if (!isLoading && (!account || accountType !== "user")) {
       router.push("/destinations");
     }
-  }, [user, isLoading, account, accountType, router]);
+  }, [accountId, isLoading, account, accountType, router]);
 
-  if (!user || isLoading) {
+  if (!accountId || isLoading) {
     return (
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50">
         <Header />
         <main className="flex-grow container mx-auto px-4 py-16 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto"></div>
-            <p className="mt-6 text-gray-600 text-lg">
-              Loading your account information...
-            </p>
-          </div>
+          <Loading text="Loading..." />
         </main>
         <Footer />
       </div>
@@ -62,7 +57,7 @@ export default function KycVerifyPage() {
           </div>
 
           <div className="bg-white rounded-xl shadow-lg overflow-hidden ring-1 ring-gray-200">
-            <KycVerificationForm userId={user.userId} />
+            <KycVerificationForm />
           </div>
         </div>
       </main>

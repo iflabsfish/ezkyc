@@ -36,7 +36,7 @@ export default async function handler(
         .json({ message: "Proof and publicSignals are required" });
     }
 
-    const userId = await getUserIdentifier(publicSignals, 'hex');
+    const userId = await getUserIdentifier(publicSignals);
 
     if (!userId) {
       return res.status(400).json({ message: "User ID is required" });

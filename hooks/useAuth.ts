@@ -1,51 +1,37 @@
 import { useRouter } from "next/navigation";
-import { cookieToInitialState } from "@account-kit/core";
-import { config } from "@/config";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { useAuthUserContext } from "@/app/context/AuthUserContext";
 
 export function useAuth() {
   const router = useRouter();
-  const [isSavingUserInfo, setIsSavingUserInfo] = useState(false);
+  const { accountId, token } = useAuthUserContext();
 
-  const saveUserInfo = useCallback(
-    async (userData: any) => {
+  const fetchWithToken = useCallback(
+    async (input: RequestInfo, init: RequestInit = {}) => {
+      if (!token) {
+        throw new Error("Sign in first.");
+      }
+      const headers = new Headers(init.headers || {});
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+      }
       try {
-        if (!userData || !userData.address) {
-          console.error("Invalid user data");
-          router.push("/destinations");
-          return;
+        const response = await fetch(input, { ...init, headers });
+        if (response.status === 401 || response.status === 403) {
+          router.push("/");
+          return null;
         }
-
-        setIsSavingUserInfo(true);
-
-        const response = await fetch("/api/auth/save-user-info", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(userData),
-        });
-
-        const result = await response.json();
-
-        const state = cookieToInitialState(
-          config,
-          document.cookie ?? undefined
-        );
-
-        router.push("/destinations");
+        return response;
       } catch (error) {
-        console.error("Error saving user info:", error);
-        router.push("/destinations");
-      } finally {
-        setIsSavingUserInfo(false);
+        router.push("/");
+        return null;
       }
     },
-    [router]
+    [router, token]
   );
 
   return {
-    saveUserInfo,
-    isSavingUserInfo,
+    fetchWithToken,
+    accountId,
   };
 }

@@ -1,6 +1,7 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
+  useAuthContext,
   useAuthModal,
   useLogout,
   useSignerStatus,
@@ -12,9 +13,11 @@ import { useStateRef } from "@/hooks/useDataRef";
 import { useUserInfo } from "@/hooks";
 import Image from "next/image";
 import { Company } from "@/types";
+import { useAuthUserContext } from "@/app/context/AuthUserContext";
 
 export function Header() {
   const user = useUser();
+  const { accountId } = useAuth();
   const { openAuthModal } = useAuthModal();
   const signerStatus = useSignerStatus();
   const { logout } = useLogout();
@@ -22,24 +25,31 @@ export function Header() {
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const hasAttemptedLoginRef = useRef(false);
-  const { saveUserInfo, isSavingUserInfo } = useAuth();
-  const isSavingUserInfoRef = useStateRef(isSavingUserInfo);
   const { account, accountType, isLoading } = useUserInfo();
+  const { setTokenAndAccountId, setUserInfo, saveUser, isSavingUser } =
+    useAuthUserContext();
+  const isSavingUserRef = useStateRef(isSavingUser);
 
   useEffect(() => {
-    if (user && hasAttemptedLoginRef.current && !isSavingUserInfoRef) {
-      saveUserInfo(user);
+    if (user && hasAttemptedLoginRef.current && !isSavingUserRef) {
+      saveUser(user)
+        .then(() => {
+          router.push("/destinations");
+        })
+        .catch((err) => {
+          console.error(err);
+        });
     }
-  }, [user, hasAttemptedLoginRef, isSavingUserInfoRef, saveUserInfo]);
+  }, [user, hasAttemptedLoginRef, isSavingUserRef, saveUser]);
 
-  const handleSignIn = () => {
-    if (user?.userId) {
+  const handleSignIn = useCallback(() => {
+    if (accountId) {
       router.push("/destinations");
     } else {
       openAuthModal();
       hasAttemptedLoginRef.current = true;
     }
-  };
+  }, [accountId, router, openAuthModal, hasAttemptedLoginRef]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -66,6 +76,18 @@ export function Header() {
 
   const hasCompanyLogo =
     accountType === "company" && (account as Company)?.logo;
+
+  const handleLogout = useCallback(() => {
+    logout();
+    setTokenAndAccountId(null, null);
+    setUserInfo({
+      isLoading: true,
+      error: null,
+      account: null,
+      accountType: null,
+    });
+    setMenuOpen(false);
+  }, [logout, setTokenAndAccountId, setUserInfo, setMenuOpen]);
 
   if (signerStatus.isInitializing) {
     return (
@@ -199,10 +221,7 @@ export function Header() {
                 )}
 
                 <button
-                  onClick={() => {
-                    logout();
-                    setMenuOpen(false);
-                  }}
+                  onClick={handleLogout}
                   className="flex items-center w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 
                     transition-colors duration-150"
                 >

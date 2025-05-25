@@ -1,35 +1,35 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@account-kit/react";
 import { Header, Footer } from "@/components";
 import { User, UserKycVerificationWithFlow } from "@/types";
 import { useUserInfo } from "@/hooks";
 import { Button } from "@/components/ui/button";
 import { KycVerificationList } from "@/app/components/kyc/KycVerificationList";
 import { Plus, RefreshCw } from "lucide-react";
-import Image from "next/image";
 import { Tooltip } from "@/components/ui/tooltip";
+import { useAuth } from "@/hooks/useAuth";
+import { useAuthUserContext } from "@/app/context/AuthUserContext";
+import { Loading } from "@/components/ui/Loading";
 
 export default function UserDashboard() {
   const router = useRouter();
-  const user = useUser();
-  const { isLoading, account, accountType, error } = useUserInfo();
+  const { accountId } = useAuth();
+  const { userInfo } = useAuthUserContext();
   const [verifications, setVerifications] = useState<
     UserKycVerificationWithFlow[]
   >([]);
   const [isLoadingVerifications, setIsLoadingVerifications] = useState(false);
+  const { fetchWithToken } = useAuth();
 
-  const fetchVerifications = async () => {
-    if (!user?.userId) return;
+  const fetchVerifications = useCallback(async () => {
+    if (!accountId) return;
 
     try {
       setIsLoadingVerifications(true);
-      const response = await fetch(
-        `/api/kyc/get-user-verifications?userId=${user.userId}`
-      );
+      const response = await fetchWithToken("/api/kyc/get-user-verifications");
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error("Failed to fetch KYC verifications");
       }
 
@@ -40,47 +40,43 @@ export default function UserDashboard() {
     } finally {
       setIsLoadingVerifications(false);
     }
-  };
+  }, [accountId, fetchWithToken]);
 
   useEffect(() => {
-    if (!user) {
+    if (!accountId) {
       router.push("/");
       return;
     }
 
-    if (!isLoading && (!account || accountType !== "user")) {
+    if (!userInfo.isLoading && userInfo.accountType !== "user") {
       router.push("/destinations");
+      return;
     }
 
-    if (user?.userId) {
-      fetchVerifications();
-    }
-  }, [user, isLoading, account, accountType, router]);
+    fetchVerifications();
+  }, [accountId, userInfo, router, fetchVerifications]);
 
-  const handleDeleteVerification = (verificationId: string) => {
+  const handleDeleteVerification = useCallback((verificationId: string) => {
     setVerifications((verifs) => verifs.filter((v) => v.id !== verificationId));
-  };
+  }, []);
 
-  if (!user || isLoading) {
+  if (!accountId || userInfo.isLoading) {
     return (
       <div className="flex flex-col min-h-screen bg-gradient-to-b from-indigo-50 to-white">
         <Header />
         <main className="flex-grow container mx-auto px-4 py-16 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading...</p>
-          </div>
+          <Loading text="Loading..." />
         </main>
         <Footer />
       </div>
     );
   }
 
-  if (!account || accountType !== "user") {
+  if (!userInfo.account || userInfo.accountType !== "user") {
     return null;
   }
 
-  const userData = account as User;
+  const userData = userInfo.account as User;
   const hasPending = verifications.some((v) => v.status === "pending");
 
   return (
@@ -127,6 +123,7 @@ export default function UserDashboard() {
                   Refresh
                 </Button>
                 <Tooltip
+                  showTip={hasPending}
                   content={
                     <>
                       You have a pending verification. Please scan the QR code
@@ -199,7 +196,6 @@ export default function UserDashboard() {
             ) : (
               <div className="space-y-4">
                 <KycVerificationList
-                  userId={user.userId}
                   verifications={verifications}
                   onDelete={handleDeleteVerification}
                 />

@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { kv } from "@vercel/kv";
 import { KycFlow } from "@/types";
+import { verifyJwt } from "@/lib/api/jwt";
 
 export default async function handler(
   req: NextApiRequest,
@@ -11,13 +12,18 @@ export default async function handler(
   }
 
   try {
-    const { userId } = req.query;
-
-    if (!userId || typeof userId !== "string") {
-      return res.status(400).json({ message: "User ID is required" });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Missing or invalid token" });
     }
+    const token = authHeader.split(" ")[1];
+    const payload = verifyJwt(token);
+    if (!payload) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+    const accountId = payload.accountId;
 
-    const flowIds = await kv.smembers(`kyc:user:${userId}`);
+    const flowIds = await kv.smembers(`kyc:user:${accountId}`);
 
     if (!flowIds || flowIds.length === 0) {
       return res.status(200).json({

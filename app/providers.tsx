@@ -2,8 +2,8 @@
 import { config, queryClient } from "@/config";
 import { AlchemyClientState } from "@account-kit/core";
 import { AlchemyAccountProvider } from "@account-kit/react";
-import { PropsWithChildren, Suspense, useEffect, useState } from "react";
-import { cookieToInitialState } from "@account-kit/core";
+import { PropsWithChildren } from "react";
+import { AuthUserProvider } from "@/app/context/AuthUserContext";
 
 export const Providers = (
   props: PropsWithChildren<{ initialState?: AlchemyClientState }>
@@ -14,7 +14,7 @@ export const Providers = (
       queryClient={queryClient}
       initialState={props.initialState}
     >
-      {props.children}
+      <AuthUserProvider>{props.children}</AuthUserProvider>
     </AlchemyAccountProvider>
   );
 };

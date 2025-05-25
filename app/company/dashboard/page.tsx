@@ -1,7 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@account-kit/react";
 import { Header, Footer } from "@/components";
 import { Button } from "@/components/ui/button";
 import { KycFlowCard } from "@/app/components/kyc/KycFlowCard";
@@ -9,6 +8,9 @@ import { Company, KycFlow, KycObject } from "@/types";
 import { useUserInfo } from "@/hooks";
 import { Plus, RefreshCw } from "lucide-react";
 import Image from "next/image";
+import { useAuth } from "@/hooks/useAuth";
+import { useCall } from "wagmi";
+import { Loading } from "@/components/ui/Loading";
 
 function normalizeKycFlow(data: KycObject): KycFlow {
   return {
@@ -37,19 +39,20 @@ function normalizeKycFlow(data: KycObject): KycFlow {
 
 export default function CompanyDashboard() {
   const router = useRouter();
-  const user = useUser();
+  const { accountId } = useAuth();
   const { isLoading, account, accountType, error } = useUserInfo();
   const [kycFlows, setKycFlows] = useState<KycFlow[]>([]);
   const [isLoadingFlows, setIsLoadingFlows] = useState(false);
+  const { fetchWithToken } = useAuth();
 
-  const fetchKycFlows = async () => {
-    if (!user?.userId) return;
+  const fetchKycFlows = useCallback(async () => {
+    if (!accountId) return;
 
     try {
       setIsLoadingFlows(true);
-      const response = await fetch(`/api/kyc/flow-list?userId=${user.userId}`);
+      const response = await fetchWithToken("/api/kyc/flow-list");
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error("Failed to fetch KYC flows");
       }
 
@@ -60,36 +63,33 @@ export default function CompanyDashboard() {
     } finally {
       setIsLoadingFlows(false);
     }
-  };
+  }, [accountId, fetchWithToken]);
 
   useEffect(() => {
-    if (!user) {
+    if (!accountId) {
       router.push("/");
       return;
     }
 
-    if (!isLoading && (!account || accountType !== "company")) {
+    if (!isLoading && accountType !== "company") {
       router.push("/destinations");
     }
 
-    if (user?.userId) {
+    if (accountId) {
       fetchKycFlows();
     }
-  }, [user, isLoading, account, accountType, router]);
+  }, [accountId, isLoading, accountType, router, fetchKycFlows]);
 
-  const handleDeleteFlow = (flowId: string) => {
+  const handleDeleteFlow = useCallback((flowId: string) => {
     setKycFlows((flows) => flows.filter((flow) => flow.id !== flowId));
-  };
+  }, []);
 
-  if (!user || isLoading) {
+  if (!accountId || isLoading) {
     return (
       <div className="flex flex-col min-h-screen bg-gradient-to-b from-indigo-50 to-white">
         <Header />
         <main className="flex-grow container mx-auto px-4 py-16 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading...</p>
-          </div>
+          <Loading text="Loading..." />
         </main>
         <Footer />
       </div>

@@ -18,14 +18,11 @@ import {
 } from "lucide-react";
 import SelfQRcodeWrapper, { SelfApp, SelfAppBuilder } from "@selfxyz/qrcode";
 import { getVerifierUrl } from "@/lib/api/env";
-import { v4 as uuidv4 } from "uuid";
+import { useAuth } from "@/hooks/useAuth";
 
-interface KycVerificationFormProps {
-  userId: string;
-}
+interface KycVerificationFormProps {}
 
-export function KycVerificationForm({ userId }: KycVerificationFormProps) {
-  const router = useRouter();
+export function KycVerificationForm() {
   const [kycFlowId, setKycFlowId] = useState("");
   const [blockchainAddress, setBlockchainAddress] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -36,6 +33,8 @@ export function KycVerificationForm({ userId }: KycVerificationFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [selfApp, setSelfApp] = useState<SelfApp | null>(null);
+  const { fetchWithToken } = useAuth();
+  const { accountId } = useAuth();
 
   const handleFetchFlowDetails = async () => {
     if (!kycFlowId.trim()) {
@@ -48,12 +47,12 @@ export function KycVerificationForm({ userId }: KycVerificationFormProps) {
       setIsLoadingFlow(true);
       setFlowError(null);
 
-      const response = await fetch(
+      const response = await fetchWithToken(
         `/api/kyc/get-flow?id=${encodeURIComponent(kycFlowId)}`
       );
-      const data = await response.json();
+      const data = await response?.json();
 
-      if (!response.ok) {
+      if (!response?.ok) {
         throw new Error(data.message || "Failed to fetch KYC flow details");
       }
 
@@ -83,32 +82,36 @@ export function KycVerificationForm({ userId }: KycVerificationFormProps) {
       return;
     }
 
+    if (!accountId) {
+      setError("Please sign in to continue");
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
 
-      const qrcodeData = mapKycFlowToSelfAppParams(flowDetails, userId);
+      const qrcodeData = mapKycFlowToSelfAppParams(flowDetails, accountId);
       const app = new SelfAppBuilder({
         ...qrcodeData,
       } as Partial<SelfApp>).build();
       setSelfApp(app);
 
-      const response = await fetch("/api/kyc/add-verification", {
+      const response = await fetchWithToken("/api/kyc/add-verification", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId,
           kycFlowId,
           blockchainAddress,
           qrcodeData: JSON.stringify(qrcodeData),
         }),
       });
 
-      const data = await response.json();
+      const data = await response?.json();
 
-      if (!response.ok) {
+      if (!response?.ok) {
         throw new Error(data.message || "Failed to submit verification");
       }
 
@@ -139,8 +142,8 @@ export function KycVerificationForm({ userId }: KycVerificationFormProps) {
             KYC Verification Created Successfully
           </h3>
           <p className="text-gray-600 mb-10 max-w-md mx-auto text-base">
-            You should scan this QR code to verify your KYC information with selfAPP on mobile.
-            You can check its status in your dashboard.
+            You should scan this QR code to verify your KYC information with
+            selfAPP on mobile. You can check its status in your dashboard.
           </p>
           {selfApp && (
             <div className="flex justify-center mt-8">

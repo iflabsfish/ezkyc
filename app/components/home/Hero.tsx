@@ -2,35 +2,51 @@
 import { Shield } from "lucide-react";
 import { useAuthModal, useUser } from "@account-kit/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useStateRef } from "@/hooks/useDataRef";
+import { useAuthUserContext } from "@/app/context/AuthUserContext";
+import { Loading } from "@/components/ui/Loading";
+
 export function Hero() {
   const user = useUser();
+  const { accountId } = useAuth();
   const { openAuthModal } = useAuthModal();
   const router = useRouter();
   const hasAttemptedLoginRef = useRef(false);
-  const { saveUserInfo, isSavingUserInfo } = useAuth();
-  const isSavingUserInfoRef = useStateRef(isSavingUserInfo);
+  const { saveUser, isSavingUser } = useAuthUserContext();
+  const isSavingUserRef = useStateRef(isSavingUser);
 
   useEffect(() => {
-    if (user && hasAttemptedLoginRef.current && !isSavingUserInfoRef.current) {
-      saveUserInfo(user);
+    if (user && hasAttemptedLoginRef.current && !isSavingUserRef.current) {
+      saveUser(user)
+        .then(() => {
+          router.push("/destinations");
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    }
+  }, [user, hasAttemptedLoginRef, isSavingUserRef, saveUser, router]);
+
+  useEffect(() => {
+    if (accountId) {
       router.push("/destinations");
     }
-  }, [user, hasAttemptedLoginRef, isSavingUserInfoRef, saveUserInfo]);
+  }, [accountId]);
 
-  const handleGetStarted = () => {
-    if (user?.userId) {
+  const handleGetStarted = useCallback(() => {
+    if (accountId) {
       router.push("/destinations");
     } else {
       openAuthModal();
       hasAttemptedLoginRef.current = true;
     }
-  };
+  }, [accountId, openAuthModal, router]);
 
   return (
     <div className="flex flex-col items-center justify-center space-y-12 text-center">
+      {isSavingUser && <Loading text="Processing..." />}
       <div className="rounded-full bg-indigo-100 p-4 mb-4">
         <Shield className="h-12 w-12 text-indigo-600" />
       </div>

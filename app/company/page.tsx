@@ -1,25 +1,29 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@account-kit/react";
 import { Header, Footer } from "@/components";
 import { Building2, Globe, ImagePlus, AlertCircle } from "lucide-react";
 import Image from "next/image";
+import { useAuth } from "@/hooks/useAuth";
+import { useAuthUserContext } from "../context/AuthUserContext";
+import { Company, User } from "@/types";
 
 export default function CompanyPage() {
   const router = useRouter();
-  const user = useUser();
+  const { accountId } = useAuth();
   const [loading, setLoading] = useState(false);
   const [companyName, setCompanyName] = useState("");
   const [logo, setLogo] = useState("");
   const [website, setWebsite] = useState("");
   const [error, setError] = useState("");
+  const { fetchWithToken } = useAuth();
+  const { setUserInfo } = useAuthUserContext();
 
   useEffect(() => {
-    if (!user) {
+    if (!accountId) {
       router.push("/");
     }
-  }, [user, router]);
+  }, [accountId, router]);
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -35,7 +39,7 @@ export default function CompanyPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!user) {
+    if (!accountId) {
       router.push("/");
       return;
     }
@@ -49,13 +53,12 @@ export default function CompanyPage() {
       setLoading(true);
 
       // Save company information via API
-      const response = await fetch("/api/company/save-company", {
+      const response = await fetchWithToken("/api/company/save-company", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          id: user.userId,
           name: companyName,
           logo: logo || undefined,
           website: website || undefined,
@@ -63,10 +66,20 @@ export default function CompanyPage() {
         }),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
+      const data = await response?.json();
+      if (!response?.ok) {
         throw new Error(data.message || "Save failed");
+      }
+
+      const userInfo = data.company as Company;
+
+      if (userInfo) {
+        setUserInfo({
+          isLoading: false,
+          error: null,
+          account: userInfo,
+          accountType: "company",
+        });
       }
 
       // Redirect to company homepage

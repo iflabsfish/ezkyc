@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { kv } from "@vercel/kv";
 import { KycFlow } from "@/types";
+import { verifyJwt } from "@/lib/api/jwt";
 
 export default async function handler(
   req: NextApiRequest,
@@ -11,6 +12,17 @@ export default async function handler(
   }
 
   try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Missing or invalid token" });
+    }
+    const token = authHeader.split(" ")[1];
+    const payload = verifyJwt(token);
+    if (!payload) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+    const accountId = payload.accountId;
+
     const { id } = req.query;
 
     if (!id || typeof id !== "string") {
@@ -21,6 +33,12 @@ export default async function handler(
 
     if (!flow) {
       return res.status(404).json({ message: "KYC flow not found" });
+    }
+
+    if (flow.userId !== accountId) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to delete this flow" });
     }
 
     const updatedFlow: KycFlow = {

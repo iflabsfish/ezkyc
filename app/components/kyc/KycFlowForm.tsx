@@ -23,13 +23,13 @@ import {
   Clock,
   Settings,
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface KycFlowFormProps {
-  userId: string;
   onSuccess?: (flow: KycFlow) => void;
 }
 
-export function KycFlowForm({ userId, onSuccess }: KycFlowFormProps) {
+export function KycFlowForm({ onSuccess }: KycFlowFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -67,6 +67,8 @@ export function KycFlowForm({ userId, onSuccess }: KycFlowFormProps) {
   const [localExcludedCountries, setLocalExcludedCountries] = useState<
     string[]
   >([]);
+
+  const { fetchWithToken } = useAuth();
 
   const handleVerificationOptionChange = (
     option: keyof typeof verificationOptions
@@ -117,14 +119,13 @@ export function KycFlowForm({ userId, onSuccess }: KycFlowFormProps) {
         ofac: enableOfacSanctionsCheck,
       };
       const flow: CreateKycFlowRequest = {
-        userId,
         projectName,
         startDate: new Date(startDate).getTime(),
         endDate: endDate ? new Date(endDate).getTime() : null,
         options,
       };
 
-      const response = await fetch("/api/kyc/add-flow", {
+      const response = await fetchWithToken("/api/kyc/add-flow", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -132,9 +133,9 @@ export function KycFlowForm({ userId, onSuccess }: KycFlowFormProps) {
         body: JSON.stringify(flow),
       });
 
-      const data = await response.json();
+      const data = await response?.json();
 
-      if (!response.ok) {
+      if (!response?.ok) {
         throw new Error(data.message || "Failed to create KYC flow");
       }
 
