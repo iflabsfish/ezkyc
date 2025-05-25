@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Header, Footer } from "@/components";
 import { Button } from "@/components/ui/button";
 import { KycFlowCard } from "@/app/components/kyc/KycFlowCard";
-import { Company, KycFlow, KycObject } from "@/types";
+import { Company, KycFlowInDBWithStats, KycFlowWithStats } from "@/types";
 import { useUserInfo } from "@/hooks";
 import { Plus, RefreshCw } from "lucide-react";
 import Image from "next/image";
@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCall } from "wagmi";
 import { Loading } from "@/components/ui/Loading";
 
-function normalizeKycFlow(data: KycObject): KycFlow {
+function normalizeKycFlow(data: KycFlowInDBWithStats): KycFlowWithStats {
   return {
     id: data.id,
     userId: data.userId,
@@ -34,6 +34,8 @@ function normalizeKycFlow(data: KycObject): KycFlow {
     isDeleted: data.isDeleted,
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
+    participantCount: data.participantCount,
+    completedCount: data.completedCount,
   };
 }
 
@@ -41,7 +43,7 @@ export default function CompanyDashboard() {
   const router = useRouter();
   const { accountId } = useAuth();
   const { isLoading, account, accountType, error } = useUserInfo();
-  const [kycFlows, setKycFlows] = useState<KycFlow[]>([]);
+  const [kycFlows, setKycFlows] = useState<KycFlowWithStats[]>([]);
   const [isLoadingFlows, setIsLoadingFlows] = useState(false);
   const { fetchWithToken } = useAuth();
 

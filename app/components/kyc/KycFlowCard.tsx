@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { KycFlow } from "@/types";
+import { KycFlow, KycFlowWithStats } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
   CalendarClock,
@@ -11,11 +11,14 @@ import {
   Copy,
   Check,
   Fingerprint,
+  UserCheck,
+  UserPlus,
+  Settings,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 interface KycFlowCardProps {
-  flow: KycFlow;
+  flow: KycFlowWithStats;
   onDelete: (flowId: string) => void;
 }
 
@@ -186,17 +189,17 @@ export function KycFlowCard({ flow, onDelete }: KycFlowCardProps) {
               {flow.enableOfacSanctionsCheck ? "Enabled" : "Disabled"}
             </div>
           </div>
-        </div>
 
-        <div className="mt-4 pt-3 border-t border-gray-100">
+          {/* Verification options moved here */}
           <div className="flex justify-between items-center">
-            <div>
-              <span className="text-xs font-medium text-gray-500">
-                Verification options:
-              </span>{" "}
-              <span className="text-xs text-gray-900">
-                {getVerificationOptionsCount()}/7 selected
-              </span>
+            <div className="flex items-center text-gray-500">
+              <Settings className="w-4 h-4 mr-2" />
+              <div>
+                <span className="font-medium">Verification options:</span>{" "}
+                <span className="text-gray-900">
+                  {getVerificationOptionsCount()}/7 selected
+                </span>
+              </div>
             </div>
 
             <div className="flex space-x-1">
@@ -215,6 +218,50 @@ export function KycFlowCard({ flow, onDelete }: KycFlowCardProps) {
             </div>
           </div>
         </div>
+
+        {/* User participation statistics moved to bottom with enhanced styling */}
+        {(flow.participantCount !== undefined ||
+          flow.completedCount !== undefined) && (
+          <div className="mt-4 pt-3 border-t border-gray-100">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="p-1.5 bg-blue-100 rounded-md">
+                      <UserPlus className="w-3.5 h-3.5 text-blue-600" />
+                    </div>
+                    <div className="ml-2">
+                      <div className="text-xs font-medium text-blue-700">
+                        Participants
+                      </div>
+                      <div className="text-lg font-bold text-blue-900">
+                        {flow.participantCount ?? 0}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-green-50 rounded-lg p-3 border border-green-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="p-1.5 bg-green-100 rounded-md">
+                      <UserCheck className="w-3.5 h-3.5 text-green-600" />
+                    </div>
+                    <div className="ml-2">
+                      <div className="text-xs font-medium text-green-700">
+                        Completed
+                      </div>
+                      <div className="text-lg font-bold text-green-900">
+                        {flow.completedCount ?? 0}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

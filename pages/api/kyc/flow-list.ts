@@ -1,6 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { kv } from "@vercel/kv";
-import { KycFlow } from "@/types";
+import {
+  UserKycVerification,
+  KycFlowInDBWithStats,
+  KycFlowInDB,
+} from "@/types";
 import { verifyJwt } from "@/lib/api/jwt";
 
 export default async function handler(
@@ -33,19 +37,58 @@ export default async function handler(
     }
 
     const flowPromises = flowIds.map((id: string) =>
-      kv.get<KycFlow>(`kyc:flow:${id}`)
+      kv.get<KycFlowInDB>(`kyc:flow:${id}`)
     );
     const flows = await Promise.all(flowPromises);
 
     const validFlows = flows
-      .filter((flow): flow is KycFlow => flow !== null)
-      .filter((flow: KycFlow) => !flow.isDeleted);
+      .filter((flow) => flow !== null)
+      .filter((flow: KycFlowInDB) => !flow.isDeleted);
 
-    validFlows.sort((a: KycFlow, b: KycFlow) => b.createdAt - a.createdAt);
+    const flowsWithStats: KycFlowInDBWithStats[] = await Promise.all(
+      validFlows.map(async (flow) => {
+        const verificationIds = await kv.smembers(
+          `kyc:flow:verifications:${flow.id}`
+        );
+
+        if (!verificationIds || verificationIds.length === 0) {
+          return {
+            ...flow,
+            participantCount: 0,
+            completedCount: 0,
+          };
+        }
+
+        const verificationPromises = verificationIds.map((id: string) =>
+          kv.get<UserKycVerification>(`kyc:verification:${id}`)
+        );
+        const verifications = await Promise.all(verificationPromises);
+
+        const validVerifications = verifications
+          .filter((v): v is UserKycVerification => v !== null)
+          .filter((v) => !v.isDeleted);
+
+        const participantCount = validVerifications.length;
+        const completedCount = validVerifications.filter(
+          (v) => v.status === "approved"
+        ).length;
+
+        return {
+          ...flow,
+          participantCount,
+          completedCount,
+        };
+      })
+    );
+
+    flowsWithStats.sort(
+      (a: KycFlowInDBWithStats, b: KycFlowInDBWithStats) =>
+        b.createdAt - a.createdAt
+    );
 
     return res.status(200).json({
       success: true,
-      flows: validFlows,
+      flows: flowsWithStats,
     });
   } catch (error) {
     console.error("Error fetching KYC flows:", error);

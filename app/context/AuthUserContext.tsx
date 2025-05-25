@@ -67,18 +67,21 @@ export const AuthUserProvider: React.FC<PropsWithChildren<{}>> = ({
         }
       }
     },
-    []
+    [user?.userId]
   );
 
-  const setUserInfoInContext = useCallback((userInfo: UserInfoState) => {
-    setUserInfo(userInfo);
-    if (user?.userId) {
-      localStorage.setItem(
-        getUserInfoKey(user.userId),
-        JSON.stringify(userInfo)
-      );
-    }
-  }, []);
+  const setUserInfoInContext = useCallback(
+    (userInfo: UserInfoState) => {
+      setUserInfo(userInfo);
+      if (user?.userId) {
+        localStorage.setItem(
+          getUserInfoKey(user.userId),
+          JSON.stringify(userInfo)
+        );
+      }
+    },
+    [user?.userId]
+  );
 
   const saveUser = useCallback(
     async (userData: UseUserResult) => {
@@ -133,7 +136,7 @@ export const AuthUserProvider: React.FC<PropsWithChildren<{}>> = ({
         }
       }
     }
-  }, [user?.userId]);
+  }, [user?.userId, setTokenAndAccountId]);
 
   useEffect(() => {
     async function fetchUserInfo() {

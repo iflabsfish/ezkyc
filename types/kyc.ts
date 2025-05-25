@@ -125,3 +125,13 @@ export interface KycObject {
   createdAt: number;
   updatedAt: number;
 }
+
+export interface KycFlowInDBWithStats extends KycFlowInDB {
+  participantCount: number;
+  completedCount: number;
+}
+
+export interface KycFlowWithStats extends KycFlow {
+  participantCount: number;
+  completedCount: number;
+}

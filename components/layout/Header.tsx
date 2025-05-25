@@ -78,7 +78,6 @@ export function Header() {
     accountType === "company" && (account as Company)?.logo;
 
   const handleLogout = useCallback(() => {
-    logout();
     setTokenAndAccountId(null, null);
     setUserInfo({
       isLoading: true,
@@ -86,6 +85,7 @@ export function Header() {
       account: null,
       accountType: null,
     });
+    logout();
     setMenuOpen(false);
   }, [logout, setTokenAndAccountId, setUserInfo, setMenuOpen]);
 
