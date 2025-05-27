@@ -9,7 +9,7 @@ import {
   CardContent,
   CardFooter,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/components/ui/Card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, X } from "lucide-react";

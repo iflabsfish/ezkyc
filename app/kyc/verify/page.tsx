@@ -2,11 +2,9 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Header, Footer } from "@/components";
+import { Header, Footer, BackButton } from "@/components";
 import { useAuth, useUserInfo } from "@/hooks";
 import { KycVerificationForm } from "@/app/components/kyc/KycVerificationForm";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import { Loading } from "@/components/ui/Loading";
 
 export default function KycVerifyPage() {
@@ -47,13 +45,7 @@ export default function KycVerifyPage() {
       <main className="flex-grow container mx-auto px-4 py-10">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
-            <Link
-              href="/user/dashboard"
-              className="inline-flex items-center text-indigo-600 hover:text-indigo-800 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              <span>Back to Dashboard</span>
-            </Link>
+            <BackButton href="/user/dashboard">Back to Dashboard</BackButton>
           </div>
 
           <div className="bg-white rounded-xl shadow-lg overflow-hidden ring-1 ring-gray-200">

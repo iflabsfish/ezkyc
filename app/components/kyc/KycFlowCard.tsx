@@ -14,8 +14,10 @@ import {
   UserCheck,
   UserPlus,
   Settings,
+  Eye,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import Link from "next/link";
 
 interface KycFlowCardProps {
   flow: KycFlowWithStats;
@@ -223,7 +225,7 @@ export function KycFlowCard({ flow, onDelete }: KycFlowCardProps) {
         {(flow.participantCount !== undefined ||
           flow.completedCount !== undefined) && (
           <div className="mt-4 pt-3 border-t border-gray-100">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
@@ -260,6 +262,14 @@ export function KycFlowCard({ flow, onDelete }: KycFlowCardProps) {
                 </div>
               </div>
             </div>
+
+            <Link
+              href={`/kyc/flow/${flow.id}/addresses`}
+              className="w-full inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 hover:text-indigo-700 transition-colors"
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              View Address Details
+            </Link>
           </div>
         )}
       </div>
