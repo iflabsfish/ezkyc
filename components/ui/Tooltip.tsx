@@ -1,4 +1,4 @@
-import React, { useState, useRef, useLayoutEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 
 export function Tooltip({
@@ -11,17 +11,20 @@ export function Tooltip({
   showTip: boolean;
 }) {
   const [show, setShow] = useState(false);
-  const [coords, setCoords] = useState<{ left: number; top: number } | null>(
-    null
-  );
+  const [coords, setCoords] = useState<{ left: number; top: number } | null>(null);
   const [tooltipSize, setTooltipSize] = useState<{
     width: number;
     height: number;
   } | null>(null);
+  const [mounted, setMounted] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
   const tooltipRef = useRef<HTMLSpanElement>(null);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (show && ref.current) {
       const rect = ref.current.getBoundingClientRect();
       setCoords({
@@ -31,7 +34,7 @@ export function Tooltip({
     }
   }, [show]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (show && tooltipRef.current) {
       const rect = tooltipRef.current.getBoundingClientRect();
       setTooltipSize({ width: rect.width, height: rect.height });
@@ -39,6 +42,8 @@ export function Tooltip({
   }, [show, content]);
 
   const { left, top } = useMemo(() => {
+    if (typeof window === 'undefined') return { left: 0, top: 0 };
+    
     let left = coords?.left ?? 0;
     let top = coords?.top ?? 0;
     if (tooltipSize) {
@@ -58,6 +63,10 @@ export function Tooltip({
     return { left, top };
   }, [coords, tooltipSize]);
 
+  if (!mounted) {
+    return <span className="relative inline-block">{children}</span>;
+  }
+
   return (
     <span
       className="relative inline-block"
@@ -72,6 +81,8 @@ export function Tooltip({
       {showTip &&
         show &&
         coords &&
+        typeof document !== 'undefined' &&
+        typeof window !== 'undefined' &&
         createPortal(
           <span
             ref={tooltipRef}

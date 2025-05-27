@@ -15,9 +15,15 @@ import {
   ShieldCheck,
   Info,
 } from "lucide-react";
-import SelfQRcodeWrapper, { SelfApp, SelfAppBuilder } from "@selfxyz/qrcode";
+import dynamic from 'next/dynamic';
+import type { SelfApp } from "@selfxyz/qrcode";
 import { getVerifierUrl } from "@/lib/api/env";
 import { useAuth } from "@/hooks/useAuth";
+
+const SelfQRcodeWrapper = dynamic(
+  () => import('@selfxyz/qrcode').then(mod => mod.default),
+  { ssr: false }
+);
 
 interface KycVerificationFormProps {}
 
@@ -91,10 +97,14 @@ export function KycVerificationForm() {
       setError(null);
 
       const qrcodeData = mapKycFlowToSelfAppParams(flowDetails, accountId);
-      const app = new SelfAppBuilder({
-        ...qrcodeData,
-      } as Partial<SelfApp>).build();
-      setSelfApp(app);
+      
+      if (typeof window !== 'undefined') {
+        const { SelfAppBuilder } = await import('@selfxyz/qrcode');
+        const app = new SelfAppBuilder({
+          ...qrcodeData,
+        } as Partial<SelfApp>).build();
+        setSelfApp(app);
+      }
 
       const response = await fetchWithToken("/api/kyc/add-verification", {
         method: "POST",

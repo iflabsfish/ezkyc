@@ -13,8 +13,14 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Trash2, X } from "lucide-react";
-import SelfQRcodeWrapper, { SelfApp, SelfAppBuilder } from "@selfxyz/qrcode";
+import dynamic from 'next/dynamic';
+import type { SelfApp } from "@selfxyz/qrcode";
 import { useAuth } from "@/hooks/useAuth";
+
+const SelfQRcodeWrapper = dynamic(
+  () => import('@selfxyz/qrcode').then(mod => mod.default),
+  { ssr: false }
+);
 
 interface KycVerificationListProps {
   verifications?: UserKycVerificationWithFlow[];
@@ -35,9 +41,16 @@ export function KycVerificationList({
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   const selfApps = useMemo(() => {
+    if (typeof window === 'undefined') return [];
     return verifications.map((item) => {
-      return new SelfAppBuilder(JSON.parse(item.qrcodeData)).build();
-    });
+      try {
+        const { SelfAppBuilder } = require('@selfxyz/qrcode');
+        return new SelfAppBuilder(JSON.parse(item.qrcodeData)).build();
+      } catch (error) {
+        console.error('Error building SelfApp:', error);
+        return null;
+      }
+    }).filter(Boolean);
   }, [verifications]);
 
   const [showQrModal, setShowQrModal] = useState(false);

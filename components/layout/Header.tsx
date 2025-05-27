@@ -52,6 +52,8 @@ export function Header() {
   }, [accountId, router, openAuthModal, hasAttemptedLoginRef]);
 
   useEffect(() => {
+    if (typeof document === 'undefined') return;
+    
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setMenuOpen(false);

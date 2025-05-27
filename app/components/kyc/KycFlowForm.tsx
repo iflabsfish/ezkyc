@@ -1,11 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/Input";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Button } from "@/components/ui/Button";
-import { countries as QR_COUNTRIES } from "@selfxyz/qrcode";
+import type { countries as QR_COUNTRIES_TYPE } from "@selfxyz/qrcode";
 import { CreateKycFlowRequest, KycFlow } from "@/types";
 import {
   AlertCircle,
@@ -35,21 +35,35 @@ export function KycFlowForm({ onSuccess }: KycFlowFormProps) {
   const [showCountrySelector, setShowCountrySelector] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [activeStep, setActiveStep] = useState(1); // 1, 2, 3 for multi-step form
+  const [QR_COUNTRIES, setQR_COUNTRIES] = useState<typeof QR_COUNTRIES_TYPE | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      import('@selfxyz/qrcode').then(module => {
+        setQR_COUNTRIES(module.countries);
+      });
+    }
+  }, []);
 
   const [projectName, setProjectName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [ageRequirement, setAgeRequirement] = useState(18);
-  const [excludedCountries, setExcludedCountries] = useState<string[]>([
-    QR_COUNTRIES.IRAN,
-    QR_COUNTRIES.IRAQ,
-    QR_COUNTRIES.NORTH_KOREA,
-    QR_COUNTRIES.RUSSIA,
-    QR_COUNTRIES.SYRIAN_ARAB_REPUBLIC,
-    QR_COUNTRIES.VENEZUELA,
-  ]);
-  const [enableOfacSanctionsCheck, setEnableOfacSanctionsCheck] =
-    useState(false);
+  const [excludedCountries, setExcludedCountries] = useState<string[]>([]);
+  const [enableOfacSanctionsCheck, setEnableOfacSanctionsCheck] = useState(false);
+
+  useEffect(() => {
+    if (QR_COUNTRIES) {
+      setExcludedCountries([
+        QR_COUNTRIES.IRAN,
+        QR_COUNTRIES.IRAQ,
+        QR_COUNTRIES.NORTH_KOREA,
+        QR_COUNTRIES.RUSSIA,
+        QR_COUNTRIES.SYRIAN_ARAB_REPUBLIC,
+        QR_COUNTRIES.VENEZUELA,
+      ]);
+    }
+  }, [QR_COUNTRIES]);
 
   const [verificationOptions, setVerificationOptions] = useState({
     discloseIssuingState: false,
@@ -539,7 +553,7 @@ export function KycFlowForm({ onSuccess }: KycFlowFormProps) {
                       <div className="flex flex-wrap gap-3">
                         {excludedCountries.map((code) => {
                           const name =
-                            Object.entries(QR_COUNTRIES).find(
+                            Object.entries(QR_COUNTRIES || {}).find(
                               ([_name, _code]) => _code === code
                             )?.[0] || code;
                           return (
@@ -651,7 +665,7 @@ export function KycFlowForm({ onSuccess }: KycFlowFormProps) {
             </div>
             <div className="overflow-y-auto flex-grow">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-1 p-2">
-                {(Object.entries(QR_COUNTRIES) as [string, string][])
+                {(Object.entries(QR_COUNTRIES || {}) as [string, string][])
                   .filter(([name, code]) =>
                     name
                       .toLowerCase()

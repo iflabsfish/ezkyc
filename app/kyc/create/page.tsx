@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Header, Footer, BackButton } from "@/components";
 import { KycFlowForm } from "@/app/components/kyc/KycFlowForm";
@@ -10,6 +10,11 @@ export default function CreateKycFlowPage() {
   const router = useRouter();
   const { accountId } = useAuth();
   const { isLoading, account, accountType } = useUserInfo();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     if (!accountId) {
@@ -22,7 +27,7 @@ export default function CreateKycFlowPage() {
     }
   }, [accountId, isLoading, account, accountType, router]);
 
-  if (!accountId || isLoading || !account || accountType !== "company") {
+  if (!isClient || !accountId || isLoading || !account || accountType !== "company") {
     return (
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50">
         <Header />
