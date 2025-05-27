@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { useUserInfo } from "@/hooks";
 import { useAuth } from "@/hooks/useAuth";
-import { Loading } from "@/components/ui/Loading";
+import { Loading } from "@/components/ui/loading";
 
 export default function DestinationsPage() {
   const { accountId } = useAuth();

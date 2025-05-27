@@ -10,7 +10,7 @@ import { Plus, RefreshCw } from "lucide-react";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthUserContext } from "@/app/context/AuthUserContext";
-import { Loading } from "@/components/ui/Loading";
+import { Loading } from "@/components/ui/loading";
 
 export default function UserDashboard() {
   const router = useRouter();

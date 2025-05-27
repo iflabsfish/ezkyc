@@ -5,8 +5,8 @@ export {
   CardTitle,
   CardDescription,
   CardContent,
-} from "./ui/Card";
+} from "./ui/card";
 
 export { Footer } from "./layout/Footer";
 export { Header } from "./layout/Header";
-export { BackButton } from "./ui/BackButton";
+export { BackButton } from "./ui/backButton";

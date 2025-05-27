@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Header, Footer } from "@/components";
-import { Loading } from "@/components/ui/Loading";
+import { Loading } from "@/components/ui/loading";
 import { CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
 
 interface VerificationData {

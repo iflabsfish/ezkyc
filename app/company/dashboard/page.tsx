@@ -10,7 +10,7 @@ import { Plus, RefreshCw } from "lucide-react";
 import Image from "next/image";
 import { useAuth } from "@/hooks/useAuth";
 import { useCall } from "wagmi";
-import { Loading } from "@/components/ui/Loading";
+import { Loading } from "@/components/ui/loading";
 
 function normalizeKycFlow(data: KycFlowInDBWithStats): KycFlowWithStats {
   return {
