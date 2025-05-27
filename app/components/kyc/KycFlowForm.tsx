@@ -1,10 +1,10 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { DatePicker } from "@/components/ui/datePicker";
-import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/Input";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { Button } from "@/components/ui/Button";
 import { countries as QR_COUNTRIES } from "@selfxyz/qrcode";
 import { CreateKycFlowRequest, KycFlow } from "@/types";
 import {

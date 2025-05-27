@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Header, Footer, BackButton } from "@/components";
-import { Loading } from "@/components/ui/loading";
+import { Loading } from "@/components/ui/Loading";
 import {
   CheckCircle,
   XCircle,

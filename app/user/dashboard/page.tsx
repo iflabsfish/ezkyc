@@ -4,13 +4,13 @@ import { useRouter } from "next/navigation";
 import { Header, Footer } from "@/components";
 import { User, UserKycVerificationWithFlow } from "@/types";
 import { useUserInfo } from "@/hooks";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { KycVerificationList } from "@/app/components/kyc/KycVerificationList";
 import { Plus, RefreshCw } from "lucide-react";
-import { Tooltip } from "@/components/ui/tooltip";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthUserContext } from "@/app/context/AuthUserContext";
-import { Loading } from "@/components/ui/loading";
+import { Loading } from "@/components/ui/Loading";
 
 export default function UserDashboard() {
   const router = useRouter();

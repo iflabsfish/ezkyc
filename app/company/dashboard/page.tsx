@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Header, Footer } from "@/components";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { KycFlowCard } from "@/app/components/kyc/KycFlowCard";
 import { Company, KycFlowInDBWithStats, KycFlowWithStats } from "@/types";
 import { useUserInfo } from "@/hooks";
@@ -10,7 +10,7 @@ import { Plus, RefreshCw } from "lucide-react";
 import Image from "next/image";
 import { useAuth } from "@/hooks/useAuth";
 import { useCall } from "wagmi";
-import { Loading } from "@/components/ui/loading";
+import { Loading } from "@/components/ui/Loading";
 
 function normalizeKycFlow(data: KycFlowInDBWithStats): KycFlowWithStats {
   return {

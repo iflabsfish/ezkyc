@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Header, Footer, BackButton } from "@/components";
 import { useAuth, useUserInfo } from "@/hooks";
 import { KycVerificationForm } from "@/app/components/kyc/KycVerificationForm";
-import { Loading } from "@/components/ui/loading";
+import { Loading } from "@/components/ui/Loading";
 
 export default function KycVerifyPage() {
   const router = useRouter();

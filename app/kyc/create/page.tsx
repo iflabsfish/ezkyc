@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Header, Footer, BackButton } from "@/components";
 import { KycFlowForm } from "@/app/components/kyc/KycFlowForm";
 import { useAuth, useUserInfo } from "@/hooks";
-import { Loading } from "@/components/ui/loading";
+import { Loading } from "@/components/ui/Loading";
 
 export default function CreateKycFlowPage() {
   const router = useRouter();

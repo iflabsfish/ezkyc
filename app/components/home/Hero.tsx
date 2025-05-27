@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useStateRef } from "@/hooks/useDataRef";
 import { useAuthUserContext } from "@/app/context/AuthUserContext";
-import { Loading } from "@/components/ui/loading";
+import { Loading } from "@/components/ui/Loading";
 
 export function Hero() {
   const user = useUser();
