@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { KycFlow, KycFlowWithStats } from "@/types";
+import { KycFlowWithStats } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
   CalendarClock,

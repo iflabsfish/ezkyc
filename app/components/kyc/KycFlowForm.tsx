@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/datePicker";
 import { Button } from "@/components/ui/button";
 import { countries as QR_COUNTRIES } from "@selfxyz/qrcode";
-import { CreateKycFlowRequest, KycFlow, KycObject, KycFlowInDB } from "@/types";
+import { CreateKycFlowRequest, KycFlow } from "@/types";
 import {
   AlertCircle,
   CalendarClock,
@@ -20,7 +20,6 @@ import {
   FileText,
   User,
   Globe,
-  Clock,
   Settings,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";

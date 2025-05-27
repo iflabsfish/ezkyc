@@ -2,13 +2,12 @@
 
 import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { KycFlow, KycObject } from "@/types";
+import { KycObject } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
   Search,
   CheckCircle2,
   AlertCircle,
-  LinkIcon,
   Calendar,
   FileText,
   User,
@@ -346,7 +345,7 @@ export function KycVerificationForm() {
                   htmlFor="blockchainAddress"
                   className="block text-sm font-medium text-gray-700 mb-1 flex items-center"
                 >
-                  <LinkIcon className="h-4 w-4 mr-1 text-indigo-500" />
+                  <Search className="h-4 w-4 mr-1 text-indigo-500" />
                   Blockchain Address{" "}
                   <span className="text-red-500 ml-1">*</span>
                 </label>
