@@ -192,12 +192,12 @@ export function KycFlowCard({ flow, onDelete }: KycFlowCardProps) {
             </div>
           </div>
 
-          {/* Verification options moved here */}
+          {/* Disclosure options moved here */}
           <div className="flex justify-between items-center">
             <div className="flex items-center text-gray-500">
               <Settings className="w-4 h-4 mr-2" />
               <div>
-                <span className="font-medium">Verification options:</span>{" "}
+                <span className="font-medium">Disclosure options:</span>{" "}
                 <span className="text-gray-900">
                   {getVerificationOptionsCount()}/7 selected
                 </span>
