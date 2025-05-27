@@ -51,6 +51,12 @@ export default async function handler(
 
     await kv.set(`kyc:verification:${id}`, updatedVerification);
 
+    await kv.del(
+      `kyc:flow:${
+        verification.kycFlowId
+      }:address:${verification.blockchainAddress.toLowerCase()}`
+    );
+
     return res.status(200).json({
       success: true,
       message: "KYC verification deleted successfully",

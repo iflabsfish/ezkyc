@@ -39,6 +39,8 @@ export default async function handler(
       return res.status(400).json({ message: "Missing required fields" });
     }
 
+    const blockchainAddress = verificationData.blockchainAddress.toLowerCase();
+
     const flow = await kv.get<KycFlowInDB>(
       `kyc:flow:${verificationData.kycFlowId}`
     );
@@ -49,6 +51,20 @@ export default async function handler(
 
     if (flow.isDeleted) {
       return res.status(400).json({ message: "KYC flow is no longer active" });
+    }
+
+    const existingVerificationForAddress = await kv.get<UserKycVerification>(
+      `kyc:flow:${verificationData.kycFlowId}:address:${blockchainAddress}`
+    );
+
+    if (
+      existingVerificationForAddress &&
+      !existingVerificationForAddress.isDeleted
+    ) {
+      return res.status(400).json({
+        message:
+          "This blockchain address has already been used for verification in this KYC flow",
+      });
     }
 
     const userVerifications = await kv.smembers(`user:kyc:${accountId}`);
@@ -73,7 +89,7 @@ export default async function handler(
       id: uuidv4(),
       userId: accountId,
       kycFlowId: verificationData.kycFlowId,
-      blockchainAddress: verificationData.blockchainAddress,
+      blockchainAddress: blockchainAddress,
       qrcodeData: verificationData.qrcodeData,
       status: "pending",
       isDeleted: false,
@@ -88,6 +104,11 @@ export default async function handler(
     await kv.sadd(
       `kyc:flow:verifications:${verification.kycFlowId}`,
       verification.id
+    );
+
+    await kv.set(
+      `kyc:flow:${verification.kycFlowId}:address:${blockchainAddress}`,
+      verification
     );
 
     return res.status(201).json({

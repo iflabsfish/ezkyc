@@ -225,6 +225,12 @@ export default async function handler(
             `kyc:verification:${verification.id}`,
             updatedVerification
           );
+          await kv.set(
+            `kyc:flow:${
+              verification.kycFlowId
+            }:address:${verification.blockchainAddress.toLowerCase()}`,
+            updatedVerification
+          );
         } else {
           const updatedVerification = {
             ...verification,
@@ -233,6 +239,12 @@ export default async function handler(
           };
           await kv.set(
             `kyc:verification:${verification.id}`,
+            updatedVerification
+          );
+          await kv.set(
+            `kyc:flow:${
+              verification.kycFlowId
+            }:address:${verification.blockchainAddress.toLowerCase()}`,
             updatedVerification
           );
         }
