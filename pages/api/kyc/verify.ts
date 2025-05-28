@@ -221,12 +221,13 @@ export default async function handler(
         filteredSubject.expiry_date = "Not disclosed";
       }
 
-      const isProofExists = await kv.hget(companyProofKey(flowId), proof);
-      if (isProofExists) {
+      const flowProofs = await kv.smembers(companyProofKey(flowId));
+      if (flowProofs.length > 0 && flowProofs.includes(proof)) {
         return res.status(400).json({
           message: "User has already verified for another address",
         });
       }
+      await kv.sadd(companyProofKey(flowId), proof);
 
       const updatedVerification = {
         ...verification,

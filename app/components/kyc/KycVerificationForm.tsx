@@ -19,17 +19,19 @@ import dynamic from 'next/dynamic';
 import type { SelfApp } from "@selfxyz/qrcode";
 import { getVerifierUrl } from "@/lib/api/env";
 import { useAuth } from "@/hooks/useAuth";
+import { isValidEVMAddress, isValidIronAddress } from "@/lib/utils/address";
 
 const SelfQRcodeWrapper = dynamic(
   () => import('@selfxyz/qrcode').then(mod => mod.default),
   { ssr: false }
 );
 
-interface KycVerificationFormProps {}
+interface KycVerificationFormProps { }
 
 export function KycVerificationForm() {
   const [kycFlowId, setKycFlowId] = useState("");
   const [blockchainAddress, setBlockchainAddress] = useState("");
+  const [addressType, setAddressType] = useState<"evm" | "iron">("evm");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [flowDetails, setFlowDetails] = useState<KycObject | null>(null);
@@ -63,6 +65,7 @@ export function KycVerificationForm() {
       }
 
       setFlowDetails(data.flow);
+      setAddressType(data.flow.addressType);
       setCurrentStep(2);
     } catch (err) {
       console.error("Error fetching KYC flow details:", err);
@@ -72,6 +75,27 @@ export function KycVerificationForm() {
       setFlowDetails(null);
     } finally {
       setIsLoadingFlow(false);
+    }
+  };
+
+  const handleSetBlockchainAddress = (value: string) => {
+    switch (addressType) {
+      case "evm":
+        if (isValidEVMAddress(value)) {
+          setBlockchainAddress(value);
+        } else {
+          setError("Invalid EVM address");
+        }
+        break;
+      case "iron":
+        if (isValidIronAddress(value)) {
+          setBlockchainAddress(value);
+        } else {
+          setError("Invalid Iron address");
+        }
+        break;
+      default:
+        setError("Invalid address");
     }
   };
 
@@ -98,7 +122,7 @@ export function KycVerificationForm() {
       setError(null);
 
       const qrcodeData = mapKycFlowToSelfAppParams(flowDetails, accountId);
-      
+
       if (typeof window !== 'undefined') {
         const { SelfAppBuilder } = await import('@selfxyz/qrcode');
         const app = new SelfAppBuilder({
@@ -160,7 +184,7 @@ export function KycVerificationForm() {
               <SelfQRcodeWrapper
                 selfApp={selfApp}
                 onSuccess={() => {
-                  router.push('/dashboard');
+                  router.push('/user/dashboard');
                 }}
                 darkMode={false}
               />
@@ -188,11 +212,10 @@ export function KycVerificationForm() {
           <div className="flex items-center justify-between px-6">
             <div className="flex flex-col items-center">
               <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                  currentStep >= 1
+                className={`w-12 h-12 rounded-full flex items-center justify-center ${currentStep >= 1
                     ? "bg-indigo-600 text-white"
                     : "bg-gray-200 text-gray-500"
-                }`}
+                  }`}
               >
                 <FileText className="w-5 h-5" />
               </div>
@@ -200,18 +223,16 @@ export function KycVerificationForm() {
             </div>
 
             <div
-              className={`flex-1 h-1 mx-4 ${
-                currentStep >= 2 ? "bg-indigo-600" : "bg-gray-200"
-              }`}
+              className={`flex-1 h-1 mx-4 ${currentStep >= 2 ? "bg-indigo-600" : "bg-gray-200"
+                }`}
             ></div>
 
             <div className="flex flex-col items-center">
               <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                  currentStep >= 2
+                className={`w-12 h-12 rounded-full flex items-center justify-center ${currentStep >= 2
                     ? "bg-indigo-600 text-white"
                     : "bg-gray-200 text-gray-500"
-                }`}
+                  }`}
               >
                 <User className="w-5 h-5" />
               </div>
@@ -219,18 +240,16 @@ export function KycVerificationForm() {
             </div>
 
             <div
-              className={`flex-1 h-1 mx-4 ${
-                currentStep >= 3 ? "bg-indigo-600" : "bg-gray-200"
-              }`}
+              className={`flex-1 h-1 mx-4 ${currentStep >= 3 ? "bg-indigo-600" : "bg-gray-200"
+                }`}
             ></div>
 
             <div className="flex flex-col items-center">
               <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                  currentStep >= 3
+                className={`w-12 h-12 rounded-full flex items-center justify-center ${currentStep >= 3
                     ? "bg-indigo-600 text-white"
                     : "bg-gray-200 text-gray-500"
-                }`}
+                  }`}
               >
                 <CheckCircle2 className="w-5 h-5" />
               </div>
@@ -274,9 +293,8 @@ export function KycVerificationForm() {
                       type="text"
                       value={kycFlowId}
                       onChange={(e) => setKycFlowId(e.target.value)}
-                      className={`w-full pl-3 pr-10 py-2.5 border ${
-                        flowError ? "border-red-300" : "border-gray-300"
-                      } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200`}
+                      className={`w-full pl-3 pr-10 py-2.5 border ${flowError ? "border-red-300" : "border-gray-300"
+                        } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200`}
                       placeholder="Enter the KYC Flow ID provided by the project"
                       required
                     />
@@ -332,6 +350,14 @@ export function KycVerificationForm() {
                   </div>
                   <div className="flex items-center text-sm">
                     <span className="font-medium text-indigo-700 w-24">
+                      Address Type:
+                    </span>
+                    <span className="text-indigo-900 whitespace-nowrap">
+                      {addressType === "evm" ? "EVM" : "Iron"}
+                    </span>
+                  </div>
+                  <div className="flex items-center text-sm">
+                    <span className="font-medium text-indigo-700 w-24">
                       Start Date:
                     </span>
                     <span className="text-indigo-900 flex items-center">
@@ -366,7 +392,7 @@ export function KycVerificationForm() {
                   id="blockchainAddress"
                   type="text"
                   value={blockchainAddress}
-                  onChange={(e) => setBlockchainAddress(e.target.value)}
+                  onChange={(e) => handleSetBlockchainAddress(e.target.value)}
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
                   placeholder="Enter your blockchain address"
                   required

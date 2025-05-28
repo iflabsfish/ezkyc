@@ -11,6 +11,7 @@ export interface SelfAppDisclosureConfig {
   ofac?: boolean;
   excludedCountries?: Country3LetterCode[];
   minimumAge?: number;
+  addressType?: "evm" | "iron";
 }
 
 /**
@@ -52,6 +53,7 @@ export interface CreateKycFlowRequest {
   startDate: number;
   endDate: number | null;
   options: SelfAppDisclosureConfig;
+  addressType: "evm" | "iron";
 }
 
 export type KycFlowInDB = CreateKycFlowRequest & {
