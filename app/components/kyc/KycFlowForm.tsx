@@ -36,6 +36,7 @@ export function KycFlowForm({ onSuccess }: KycFlowFormProps) {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [activeStep, setActiveStep] = useState(1); // 1, 2, 3 for multi-step form
   const [QR_COUNTRIES, setQR_COUNTRIES] = useState<typeof QR_COUNTRIES_TYPE | null>(null);
+  const [addressType, setAddressType] = useState<"evm" | "iron">("evm");
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -135,6 +136,7 @@ export function KycFlowForm({ onSuccess }: KycFlowFormProps) {
         projectName,
         startDate: new Date(startDate).getTime(),
         endDate: endDate ? new Date(endDate).getTime() : null,
+        addressType,
         options,
       };
 
@@ -349,6 +351,35 @@ export function KycFlowForm({ onSuccess }: KycFlowFormProps) {
                     hint="The name of the project that will use this KYC flow"
                     className="transition-all focus:ring-2 focus:ring-indigo-500"
                   />
+                </div>
+
+                <div className="mb-8">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Address Type
+                  </label>
+                  <div className="flex gap-4">
+                    <label className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        className="form-radio h-4 w-4 text-indigo-600"
+                        checked={addressType === "evm"}
+                        onChange={() => setAddressType("evm")}
+                      />
+                      <span className="ml-2 text-gray-700">EVM</span>
+                    </label>
+                    <label className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        className="form-radio h-4 w-4 text-indigo-600"
+                        checked={addressType === "iron"}
+                        onChange={() => setAddressType("iron")}
+                      />
+                      <span className="ml-2 text-gray-700">Iron</span>
+                    </label>
+                  </div>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Select the blockchain address type for this KYC flow
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
