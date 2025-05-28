@@ -40,6 +40,7 @@ export function KycVerificationForm() {
   const [selfApp, setSelfApp] = useState<SelfApp | null>(null);
   const { fetchWithToken } = useAuth();
   const { accountId } = useAuth();
+  const router = useRouter();
 
   const handleFetchFlowDetails = async () => {
     if (!kycFlowId.trim()) {
@@ -158,7 +159,9 @@ export function KycVerificationForm() {
             <div className="flex justify-center mt-8">
               <SelfQRcodeWrapper
                 selfApp={selfApp}
-                onSuccess={() => {}}
+                onSuccess={() => {
+                  router.push('/dashboard');
+                }}
                 darkMode={false}
               />
             </div>

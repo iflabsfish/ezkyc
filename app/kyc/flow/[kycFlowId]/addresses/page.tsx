@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Header, Footer, BackButton } from "@/components";
+import { Header, Footer, BackButton, Toast, useToast } from "@/components";
 import { Loading } from "@/components/ui/Loading";
 import {
   CheckCircle,
   XCircle,
   Clock,
-  ArrowLeft,
   ExternalLink,
   Copy,
   Search,
@@ -17,6 +16,7 @@ import {
   Hash,
   TrendingUp,
   ChevronDown,
+  Download,
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/hooks";
@@ -49,6 +49,7 @@ export default function FlowAddressesPage() {
   const router = useRouter();
   const { accountId } = useAuth();
   const { token } = useAuthUserContext();
+  const { showToast, toastProps } = useToast();
   const [data, setData] = useState<FlowAddressesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -105,12 +106,12 @@ export default function FlowAddressesPage() {
       }
     };
 
-    if (isFilterOpen && typeof document !== 'undefined') {
+    if (isFilterOpen && typeof document !== "undefined") {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      if (typeof document !== 'undefined') {
+      if (typeof document !== "undefined") {
         document.removeEventListener("mousedown", handleClickOutside);
       }
     };
@@ -221,6 +222,70 @@ export default function FlowAddressesPage() {
     }
 
     return filtered.sort((a, b) => b.createdAt - a.createdAt);
+  };
+
+  const exportToCSV = () => {
+    const filteredAddresses = getAllAddresses();
+
+    if (filteredAddresses.length === 0) {
+      showToast("No data to export");
+      return;
+    }
+
+    const headers = [
+      "Blockchain Address",
+      "Status",
+      "Created At",
+      "Updated At",
+      "Verification ID",
+    ];
+
+    const csvData = filteredAddresses.map((address) => [
+      address.blockchainAddress,
+      address.status === "pending"
+        ? "Pending"
+        : address.status === "approved"
+        ? "Approved"
+        : "Rejected",
+      formatDate(address.createdAt),
+      formatDate(address.updatedAt),
+      address.verificationId,
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...csvData.map((row) => row.map((field) => `"${field}"`).join(",")),
+    ].join("\n");
+
+    const blob = new Blob(["\uFEFF" + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+
+    const projectName = data?.flow.projectName || "KYC Project";
+    const statusText =
+      selectedStatus === "all"
+        ? "All Status"
+        : selectedStatus === "pending"
+        ? "Pending"
+        : selectedStatus === "approved"
+        ? "Approved"
+        : "Rejected";
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, "-");
+    const filename = `${projectName}_${statusText}_Addresses_${timestamp}.csv`;
+
+    link.setAttribute("download", filename);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showToast(
+      `Successfully exported ${filteredAddresses.length} addresses`,
+      "success"
+    );
   };
 
   const getStatusDisplayText = (
@@ -472,50 +537,60 @@ export default function FlowAddressesPage() {
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
                     />
                   </div>
-                  <div className="relative filter-dropdown">
+                  <div className="flex items-center gap-3">
                     <button
-                      onClick={() => setIsFilterOpen(!isFilterOpen)}
-                      className="flex items-center space-x-3 px-4 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 min-w-[140px]"
+                      onClick={exportToCSV}
+                      className="flex items-center space-x-2 px-4 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 font-medium text-gray-700"
+                      title="Export current list as CSV file"
                     >
-                      {getStatusDisplayIcon(selectedStatus)}
-                      <span className="font-medium text-gray-700">
-                        {getStatusDisplayText(selectedStatus)}
-                      </span>
-                      <ChevronDown
-                        className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
-                          isFilterOpen ? "rotate-180" : ""
-                        }`}
-                      />
+                      <Download className="w-4 h-4" />
+                      <span>Export CSV</span>
                     </button>
+                    <div className="relative filter-dropdown">
+                      <button
+                        onClick={() => setIsFilterOpen(!isFilterOpen)}
+                        className="flex items-center space-x-3 px-4 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 min-w-[140px]"
+                      >
+                        {getStatusDisplayIcon(selectedStatus)}
+                        <span className="font-medium text-gray-700">
+                          {getStatusDisplayText(selectedStatus)}
+                        </span>
+                        <ChevronDown
+                          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+                            isFilterOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
 
-                    {isFilterOpen && (
-                      <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-10 overflow-hidden">
-                        {(
-                          ["all", "pending", "approved", "rejected"] as const
-                        ).map((status) => (
-                          <button
-                            key={status}
-                            onClick={() => {
-                              setSelectedStatus(status);
-                              setIsFilterOpen(false);
-                            }}
-                            className={`w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors ${
-                              selectedStatus === status
-                                ? "bg-indigo-50 text-indigo-700"
-                                : "text-gray-700"
-                            }`}
-                          >
-                            {getStatusDisplayIcon(status)}
-                            <span className="font-medium">
-                              {getStatusDisplayText(status)}
-                            </span>
-                            {selectedStatus === status && (
-                              <CheckCircle className="w-4 h-4 text-indigo-500 ml-auto" />
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                      {isFilterOpen && (
+                        <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-10 overflow-hidden">
+                          {(
+                            ["all", "pending", "approved", "rejected"] as const
+                          ).map((status) => (
+                            <button
+                              key={status}
+                              onClick={() => {
+                                setSelectedStatus(status);
+                                setIsFilterOpen(false);
+                              }}
+                              className={`w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors ${
+                                selectedStatus === status
+                                  ? "bg-indigo-50 text-indigo-700"
+                                  : "text-gray-700"
+                              }`}
+                            >
+                              {getStatusDisplayIcon(status)}
+                              <span className="font-medium">
+                                {getStatusDisplayText(status)}
+                              </span>
+                              {selectedStatus === status && (
+                                <CheckCircle className="w-4 h-4 text-indigo-500 ml-auto" />
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -566,6 +641,8 @@ export default function FlowAddressesPage() {
         </div>
       </main>
       <Footer />
+
+      <Toast {...toastProps} />
     </div>
   );
 }

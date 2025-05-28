@@ -271,26 +271,28 @@ export function KycVerificationList({
               </div>
             </div>
             <div className="flex justify-center mt-6">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleShowQr(index)}
-                className="rounded-full px-5 py-2 flex items-center gap-2 border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 transition-colors shadow-sm"
-              >
-                <svg
-                  className="w-4 h-4 text-indigo-500"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
+              {verification.status === 'pending' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleShowQr(index)}
+                  className="rounded-full px-5 py-2 flex items-center gap-2 border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 transition-colors shadow-sm"
                 >
-                  <rect x="3" y="3" width="7" height="7" rx="1.5" />
-                  <rect x="14" y="3" width="7" height="7" rx="1.5" />
-                  <rect x="14" y="14" width="7" height="7" rx="1.5" />
-                  <rect x="3" y="14" width="7" height="7" rx="1.5" />
-                </svg>
-                Show QR Code
-              </Button>
+                  <svg
+                    className="w-4 h-4 text-indigo-500"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                    <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                  </svg>
+                  Show QR Code
+                </Button>
+              )}
             </div>
           </CardContent>
         </div>
