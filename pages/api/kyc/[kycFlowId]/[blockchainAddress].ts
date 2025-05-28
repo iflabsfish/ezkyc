@@ -33,7 +33,14 @@ export default async function handler(
       `kyc:flow:${kycFlowId}:address:${normalizedAddress}`
     );
 
-    if (!verification || verification.isDeleted) {
+    if (!verification) {
+      return res.status(404).json({
+        message: "No verification found for this address in this flow",
+        status: "not_found",
+      });
+    }
+
+    if (verification.status === "pending" && verification.isDeleted) {
       return res.status(404).json({
         message: "No verification found for this address in this flow",
         status: "not_found",

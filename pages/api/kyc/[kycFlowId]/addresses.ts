@@ -72,12 +72,12 @@ export default async function handler(
     );
     const verifications = await Promise.all(verificationPromises);
 
-    const validVerifications = verifications
-      .filter((v): v is UserKycVerification => v !== null)
-      .filter((v) => !v.isDeleted);
+    const validVerifications = verifications.filter(
+      (v): v is UserKycVerification => v !== null
+    );
 
     const pendingAddresses = validVerifications
-      .filter((v) => v.status === "pending")
+      .filter((v) => !v.isDeleted && v.status === "pending")
       .map((v) => ({
         blockchainAddress: v.blockchainAddress,
         createdAt: v.createdAt,
@@ -119,7 +119,10 @@ export default async function handler(
         approved: approvedAddresses,
         rejected: rejectedAddresses,
       },
-      totalCount: validVerifications.length,
+      totalCount:
+        pendingAddresses.length +
+        approvedAddresses.length +
+        rejectedAddresses.length,
     });
   } catch (error) {
     console.error("Error fetching flow addresses:", error);

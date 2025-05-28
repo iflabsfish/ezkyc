@@ -64,14 +64,20 @@ export default async function handler(
         );
         const verifications = await Promise.all(verificationPromises);
 
-        const validVerifications = verifications
-          .filter((v): v is UserKycVerification => v !== null)
-          .filter((v) => !v.isDeleted);
+        const nonNullVerifications = verifications.filter(
+          (v): v is UserKycVerification => v !== null
+        );
 
-        const participantCount = validVerifications.length;
-        const completedCount = validVerifications.filter(
+        const completedCount = nonNullVerifications.filter(
           (v) => v.status === "approved"
         ).length;
+
+        const participantCount = nonNullVerifications.filter((v) => {
+          if (v.status === "pending") {
+            return !v.isDeleted;
+          }
+          return true;
+        }).length;
 
         return {
           ...flow,
