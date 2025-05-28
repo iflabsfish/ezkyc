@@ -160,7 +160,7 @@ export function KycVerificationForm() {
               <SelfQRcodeWrapper
                 selfApp={selfApp}
                 onSuccess={() => {
-                  router.push('/dashboard');
+                  router.push('/user/dashboard');
                 }}
                 darkMode={false}
               />
