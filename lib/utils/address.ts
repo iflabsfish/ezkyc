@@ -36,5 +36,14 @@ examples.forEach(addr => {
 */ 
 
 export function isValidIronAddress(address: string): boolean {
-  return true;
+  return (
+    address.length === 64 &&
+    haveAllowedCharacters(address)
+  );
+}
+
+
+function haveAllowedCharacters(text: string): boolean {
+  const validInputRegex = /^[0-9a-f]+$/
+  return validInputRegex.exec(text.toLowerCase()) != null
 }
