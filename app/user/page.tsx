@@ -103,7 +103,7 @@ export default function UserPage() {
             {flowId && (
               <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                 <p className="text-green-700 text-sm">
-                  You'll be automatically set up for KYC verification after completing your profile.
+                  You&apos;ll be automatically set up for KYC verification after completing your profile.
                 </p>
               </div>
             )}
@@ -168,7 +168,7 @@ export default function UserPage() {
                   placeholder="Enter your email address (optional)"
                 />
                 <p className="text-sm text-gray-500 mt-1">
-                  Optional: We'll use this for account recovery and notifications
+                  Optional: We&apos;ll use this for account recovery and notifications
                 </p>
               </div>
 

@@ -36,6 +36,7 @@ function normalizeKycFlow(data: KycFlowInDBWithStats): KycFlowWithStats {
     updatedAt: data.updatedAt,
     participantCount: data.participantCount,
     completedCount: data.completedCount,
+    addressType: data.addressType,
   };
 }
 
