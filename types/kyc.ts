@@ -1,4 +1,5 @@
 import { countries } from "@selfxyz/qrcode";
+import { AddressType } from "./address";
 
 export interface SelfAppDisclosureConfig {
   issuing_state?: boolean;
@@ -43,6 +44,7 @@ export interface KycFlow {
   isDeleted: boolean;
   createdAt: number; // timestamp
   updatedAt: number; // timestamp
+  addressType: AddressType;
 }
 
 /**
@@ -126,6 +128,7 @@ export interface KycObject {
   isDeleted: boolean;
   createdAt: number;
   updatedAt: number;
+  addressType: AddressType;
 }
 
 export interface KycFlowInDBWithStats extends KycFlowInDB {

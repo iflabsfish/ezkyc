@@ -1,7 +1,7 @@
 "use client";
 import { Header, Footer } from "@/components";
 import { DestinationCards } from "../components/home/DestinationCards";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { useUserInfo } from "@/hooks";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,7 +10,13 @@ import { Loading } from "@/components/ui/Loading";
 export default function DestinationsPage() {
   const { accountId } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const flowId = searchParams?.get('flowId') || null;
   const { isLoading, account, accountType, error } = useUserInfo();
+
+  const shouldAutoSelectUser = useMemo(() => {
+    return flowId && !isLoading && !account;
+  }, [flowId, isLoading, account]);
 
   useEffect(() => {
     // If the user is not logged in, redirect to the home page
@@ -19,15 +25,25 @@ export default function DestinationsPage() {
       return;
     }
 
-    // If user information is loaded and exists, redirect to the corresponding dashboard
     if (!isLoading && account) {
       if (accountType === "user") {
-        router.push("/user/dashboard");
+        const dashboardUrl = flowId 
+          ? `/user/dashboard?flowId=${encodeURIComponent(flowId)}`
+          : "/user/dashboard";
+        router.push(dashboardUrl);
       } else if (accountType === "company") {
         router.push("/company/dashboard");
       }
+      return;
     }
-  }, [accountId, isLoading, account, accountType, router]);
+
+    if (shouldAutoSelectUser) {
+      const userPageUrl = flowId 
+        ? `/user?flowId=${encodeURIComponent(flowId)}`
+        : "/user";
+      router.push(userPageUrl);
+    }
+  }, [accountId, isLoading, account, accountType, router, flowId, shouldAutoSelectUser]);
 
   // If the user is not logged in or information is loading, do not display content
   if (!accountId || isLoading) {
@@ -42,7 +58,18 @@ export default function DestinationsPage() {
     );
   }
 
-  // If the user is logged in but has not completed information, show the selection page
+  if (shouldAutoSelectUser) {
+    return (
+      <div className="flex flex-col min-h-screen bg-gradient-to-b from-indigo-50 to-white">
+        <Header />
+        <main className="flex-grow container mx-auto px-4 py-16 flex items-center justify-center">
+          <Loading text="Setting up your account..." />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-indigo-50 to-white">
       <Header />
@@ -58,7 +85,7 @@ export default function DestinationsPage() {
             Please select your account type to continue
           </p>
           <div className="w-full max-w-4xl mx-auto">
-            <DestinationCards />
+            <DestinationCards flowId={flowId} />
           </div>
         </div>
       </main>

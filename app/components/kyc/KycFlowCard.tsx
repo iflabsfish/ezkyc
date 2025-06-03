@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { KycFlowWithStats } from "@/types";
 import { Button } from "@/components/ui/Button";
 import {
@@ -15,9 +15,10 @@ import {
   UserPlus,
   Settings,
   Eye,
+  Link,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import Link from "next/link";
+import NextLink from "next/link";
 
 interface KycFlowCardProps {
   flow: KycFlowWithStats;
@@ -28,6 +29,7 @@ export function KycFlowCard({ flow, onDelete }: KycFlowCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [isVerifyLinkCopied, setIsVerifyLinkCopied] = useState(false);
   const { fetchWithToken } = useAuth();
 
   const handleDelete = async () => {
@@ -79,6 +81,30 @@ export function KycFlowCard({ flow, onDelete }: KycFlowCardProps) {
     setTimeout(() => {
       setIsCopied(false);
     }, 2000);
+  };
+
+  const isFlowActive = useMemo(() => {
+    const now = Date.now();
+    const startDate = flow.startDate;
+    const endDate = flow.endDate;
+
+    // Flow is active if current time is between start and end date
+    return now >= startDate && (!endDate || now <= endDate);
+  }, [flow.startDate, flow.endDate]);
+
+  const copyVerifyLink = () => {
+    if (typeof window !== "undefined") {
+      const currentDomain = window.location.origin;
+      const verifyLink = `${currentDomain}/?flowId=${encodeURIComponent(
+        flow.id
+      )}`;
+      navigator.clipboard.writeText(verifyLink);
+      setIsVerifyLinkCopied(true);
+
+      setTimeout(() => {
+        setIsVerifyLinkCopied(false);
+      }, 2000);
+    }
   };
 
   const formatId = (id: string) => {
@@ -219,6 +245,52 @@ export function KycFlowCard({ flow, onDelete }: KycFlowCardProps) {
               })}
             </div>
           </div>
+
+          {/* Share verification link section - always show to maintain consistent height */}
+          <div className="p-3 rounded-lg border border-gray-200">
+            {isFlowActive ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center text-gray-700">
+                  <Link className="w-4 h-4 mr-2 text-gray-500" />
+                  <span className="font-medium text-sm">
+                    Share verification link
+                  </span>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={copyVerifyLink}
+                  className={`transition-all duration-200 ${
+                    isVerifyLinkCopied
+                      ? "bg-green-100 border-green-300 text-green-700"
+                      : "bg-white border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400"
+                  }`}
+                >
+                  {isVerifyLinkCopied ? (
+                    <>
+                      <Check className="w-4 h-4 mr-1" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4 mr-1" />
+                      Copy
+                    </>
+                  )}
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center text-gray-500">
+                  <AlertCircle className="w-4 h-4 mr-2 text-gray-400" />
+                  <span className="font-medium text-sm">Flow not active</span>
+                </div>
+                <div className="inline-flex items-center justify-center text-sm px-3 py-1.5 rounded border border-gray-200 bg-gray-50 text-gray-500">
+                  Link unavailable
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* User participation statistics moved to bottom with enhanced styling */}
@@ -263,13 +335,13 @@ export function KycFlowCard({ flow, onDelete }: KycFlowCardProps) {
               </div>
             </div>
 
-            <Link
+            <NextLink
               href={`/kyc/flow/${flow.id}/addresses`}
               className="w-full inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 hover:text-indigo-700 transition-colors"
             >
               <Eye className="w-4 h-4 mr-2" />
               View Address Details
-            </Link>
+            </NextLink>
           </div>
         )}
       </div>

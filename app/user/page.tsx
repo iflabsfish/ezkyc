@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Header, Footer } from "@/components";
 import { User, Mail, AlertCircle, ArrowRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +9,8 @@ import { User as UserType } from "@/types";
 
 export default function UserPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const flowId = searchParams?.get('flowId') || null;
   const { accountId } = useAuth();
   const { fetchWithToken } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -28,17 +30,22 @@ export default function UserPage() {
       e.preventDefault();
 
       if (!username.trim()) {
-        setError("Username is required");
+        setError("Please fill in your name");
         return;
       }
 
-      if (!accountId) {
-        router.push("/");
-        return;
+      // Email validation only if email is provided
+      if (email.trim()) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          setError("Please enter a valid email address");
+          return;
+        }
       }
 
       try {
         setLoading(true);
+        setError("");
 
         const response = await fetchWithToken("/api/user/save-user", {
           method: "POST",
@@ -47,7 +54,7 @@ export default function UserPage() {
           },
           body: JSON.stringify({
             name: username,
-            email: email || undefined,
+            email: email.trim() || undefined, // Send undefined if email is empty
             type: "user",
           }),
         });
@@ -55,28 +62,29 @@ export default function UserPage() {
         const data = await response?.json();
 
         if (!response?.ok) {
-          throw new Error(data.message || "Save failed");
+          throw new Error(data.message || "Failed to create user");
         }
-        const userInfo = data.user as UserType;
-        if (userInfo) {
-          setUserInfo({
-            isLoading: false,
-            error: null,
-            account: userInfo,
-            accountType: "user",
-          });
-        }
-        router.push("/user/dashboard");
+
+        const userData: UserType = data.user;
+        setUserInfo({
+          isLoading: false,
+          error: null,
+          account: userData,
+          accountType: "user",
+        });
+
+        const dashboardUrl = flowId 
+          ? `/user/dashboard?flowId=${encodeURIComponent(flowId)}`
+          : "/user/dashboard";
+        router.push(dashboardUrl);
       } catch (err) {
-        console.error(err);
-        setError(
-          (err as Error).message || "Submission failed, please try again"
-        );
+        console.error("Error creating user:", err);
+        setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setLoading(false);
       }
     },
-    [accountId, router, fetchWithToken, username, email]
+    [username, email, fetchWithToken, setUserInfo, router, flowId]
   );
 
   return (
@@ -92,6 +100,13 @@ export default function UserPage() {
               Complete your profile to personalize your experience and access
               all features.
             </p>
+            {flowId && (
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-green-700 text-sm">
+                  You'll be automatically set up for KYC verification after completing your profile.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
@@ -109,93 +124,77 @@ export default function UserPage() {
               </div>
             )}
 
-            <div className="p-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Username *
-                  </label>
-                  <div className="relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <User className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      className="block w-full pl-10 px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Enter your username"
-                      required
-                    />
-                  </div>
-                  <p className="mt-1 text-xs text-gray-500">
-                    This name will be displayed on your profile.
-                  </p>
-                </div>
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              <div>
+                <label
+                  htmlFor="username"
+                  className="block text-sm font-medium text-gray-700 mb-1 flex items-center"
+                >
+                  <User className="h-4 w-4 mr-1 text-indigo-500" />
+                  Full Name <span className="text-red-500 ml-1">*</span>
+                </label>
+                <input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm 
+                    focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 
+                    transition-all duration-200"
+                  placeholder="Enter your full name"
+                  required
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Enter your legal name as it appears on your ID
+                </p>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email (Optional)
-                  </label>
-                  <div className="relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="block w-full pl-10 px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="example@example.com"
-                    />
-                  </div>
-                  <p className="mt-1 text-xs text-gray-500">
-                    We&apos;ll never share your email with anyone else.
-                  </p>
-                </div>
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700 mb-1 flex items-center"
+                >
+                  <Mail className="h-4 w-4 mr-1 text-indigo-500" />
+                  Email Address <span className="text-gray-400 ml-1">(Optional)</span>
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm 
+                    focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 
+                    transition-all duration-200"
+                  placeholder="Enter your email address (optional)"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Optional: We'll use this for account recovery and notifications
+                </p>
+              </div>
 
-                <div className="pt-4">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 
-                    focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 
-                    disabled:opacity-50 transition-all duration-200 flex items-center justify-center"
-                  >
-                    {loading ? (
-                      <>
-                        <svg
-                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        Continue to Dashboard
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-indigo-600 text-white px-4 py-3 rounded-md font-medium
+                    hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 
+                    focus:ring-offset-2 transition-all duration-200 flex items-center justify-center
+                    disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <span className="flex items-center">
+                      <span className="h-4 w-4 mr-2 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+                      Creating Profile...
+                    </span>
+                  ) : (
+                    <span className="flex items-center">
+                      Complete Setup
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </span>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
 
           <p className="text-center text-gray-500 text-sm mt-8">
