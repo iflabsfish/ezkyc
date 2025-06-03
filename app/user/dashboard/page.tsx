@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Header, Footer } from "@/components";
 import { User, UserKycVerificationWithFlow } from "@/types";
 import { useUserInfo } from "@/hooks";
@@ -11,16 +11,27 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthUserContext } from "@/app/context/AuthUserContext";
 import { Loading } from "@/components/ui/Loading";
+import { useFlowValidation } from "@/hooks/useFlowValidation";
 
 export default function UserDashboard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const flowId = searchParams?.get('flowId') || null;
   const { accountId } = useAuth();
   const { userInfo } = useAuthUserContext();
   const [verifications, setVerifications] = useState<
     UserKycVerificationWithFlow[]
   >([]);
   const [isLoadingVerifications, setIsLoadingVerifications] = useState(false);
+  const [isCheckingFlow, setIsCheckingFlow] = useState(false);
   const { fetchWithToken } = useAuth();
+
+  const {
+    flowData,
+    flowValidationStatus,
+    isFlowActive,
+    flowExists
+  } = useFlowValidation(flowId);
 
   const fetchVerifications = useCallback(async () => {
     if (!accountId) return;
@@ -42,6 +53,38 @@ export default function UserDashboard() {
     }
   }, [accountId, fetchWithToken]);
 
+  const checkAndStartKycFlow = useCallback(async () => {
+    if (!flowId || !accountId) return;
+
+    if (flowValidationStatus !== 'valid') {
+      console.log('Flow is not valid or active, skipping auto-start');
+      return;
+    }
+
+    try {
+      setIsCheckingFlow(true);
+
+      const hasPendingVerification = verifications.some(v => v.status === 'pending');
+      if (hasPendingVerification) {
+        console.log('User already has pending verification, skipping auto-start');
+        return;
+      }
+
+      const hasParticipatedInFlow = verifications.some(v => v.kycFlowId === flowId);
+      if (hasParticipatedInFlow) {
+        console.log('User already participated in this flow, skipping auto-start');
+        return;
+      }
+
+      const verifyUrl = `/kyc/verify?flowId=${encodeURIComponent(flowId)}`;
+      router.push(verifyUrl);
+    } catch (error) {
+      console.error('Error checking flow for auto-start:', error);
+    } finally {
+      setIsCheckingFlow(false);
+    }
+  }, [flowId, accountId, flowValidationStatus, verifications, router]);
+
   useEffect(() => {
     if (!accountId) {
       router.push("/");
@@ -56,8 +99,16 @@ export default function UserDashboard() {
     fetchVerifications();
   }, [accountId, userInfo, router, fetchVerifications]);
 
+  useEffect(() => {
+    if (flowId && !isLoadingVerifications && verifications.length >= 0 && flowValidationStatus !== 'loading') {
+      checkAndStartKycFlow();
+    }
+  }, [flowId, isLoadingVerifications, verifications, flowValidationStatus, checkAndStartKycFlow]);
+
   const handleDeleteVerification = useCallback((verificationId: string) => {
-    setVerifications((verifs) => verifs.filter((v) => v.id !== verificationId));
+    setVerifications((prev) =>
+      prev.filter((verification) => verification.id !== verificationId)
+    );
   }, []);
 
   if (!accountId || userInfo.isLoading) {
@@ -77,7 +128,25 @@ export default function UserDashboard() {
   }
 
   const userData = userInfo.account as User;
-  const hasPending = verifications.some((v) => v.status === "pending");
+
+  if (isCheckingFlow && flowId) {
+    return (
+      <div className="flex flex-col min-h-screen bg-gradient-to-b from-indigo-50 to-white">
+        <Header />
+        <main className="flex-grow container mx-auto px-4 py-16 flex items-center justify-center">
+          <Loading text="Setting up verification..." />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const handleStartVerification = () => {
+    const verifyUrl = flowId 
+      ? `/kyc/verify?flowId=${encodeURIComponent(flowId)}`
+      : "/kyc/verify";
+    router.push(verifyUrl);
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-indigo-50 to-white">
@@ -100,106 +169,100 @@ export default function UserDashboard() {
                 )}
               </div>
             </div>
+            
+            {flowId && (
+              <div className={`mb-4 p-4 rounded-lg border ${
+                flowValidationStatus === 'valid' ? 'bg-blue-50 border-blue-200' :
+                flowValidationStatus === 'inactive' ? 'bg-yellow-50 border-yellow-200' :
+                flowValidationStatus === 'invalid' ? 'bg-red-50 border-red-200' :
+                flowValidationStatus === 'loading' ? 'bg-gray-50 border-gray-200' :
+                'bg-gray-50 border-gray-200'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className={`font-medium ${
+                      flowValidationStatus === 'valid' ? 'text-blue-700' :
+                      flowValidationStatus === 'inactive' ? 'text-yellow-700' :
+                      flowValidationStatus === 'invalid' ? 'text-red-700' :
+                      'text-gray-700'
+                    }`}>
+                      {flowValidationStatus === 'valid' ? 'Quick Verification Available' :
+                       flowValidationStatus === 'inactive' ? 'Flow Not Currently Active' :
+                       flowValidationStatus === 'invalid' ? 'Invalid Flow' :
+                       flowValidationStatus === 'loading' ? 'Validating Flow...' :
+                       'Flow Validation'}
+                    </p>
+                    <p className={`text-sm ${
+                      flowValidationStatus === 'valid' ? 'text-blue-600' :
+                      flowValidationStatus === 'inactive' ? 'text-yellow-600' :
+                      flowValidationStatus === 'invalid' ? 'text-red-600' :
+                      'text-gray-600'
+                    }`}>
+                      Flow ID: {flowId}
+                      {flowData && (
+                        <span className="block mt-1">
+                          Project: {flowData.projectName}
+                          {flowValidationStatus === 'inactive' && (
+                            <span className="block">
+                              Active: {new Date(flowData.startDate).toLocaleDateString()} - {
+                                flowData.endDate ? new Date(flowData.endDate).toLocaleDateString() : 'No end date'
+                              }
+                            </span>
+                          )}
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  {flowValidationStatus === 'valid' && (
+                    <Button onClick={handleStartVerification} variant="primary" size="sm">
+                      Start Verification
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="bg-white rounded-xl shadow-md overflow-hidden p-6 mb-8">
-            <div className="flex justify-between items-center mb-6">
+          <div className="bg-white rounded-xl shadow-md overflow-hidden p-6">
+            <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900">
                 KYC Verifications
               </h2>
-              <div className="flex space-x-2">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={fetchVerifications}
-                  disabled={isLoadingVerifications}
-                  className="flex items-center"
-                >
-                  {isLoadingVerifications ? (
-                    <span className="h-4 w-4 mr-1 rounded-full border-2 border-gray-400 border-t-transparent animate-spin"></span>
-                  ) : (
-                    <RefreshCw className="h-4 w-4 mr-1" />
-                  )}
-                  Refresh
-                </Button>
-                <Tooltip
-                  showTip={hasPending}
-                  content={
-                    <>
-                      You have a pending verification. Please scan the QR code
-                      to continue,
-                      <br />
-                      or delete the pending verification.
-                    </>
-                  }
-                >
-                  <span>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        if (hasPending) {
-                          alert(
-                            "You have a pending verification. Please scan the QR code to continue verification, or delete the pending verification."
-                          );
-                          return;
-                        }
-                        router.push("/kyc/verify");
-                      }}
-                      className="flex items-center"
-                      disabled={hasPending}
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      New Verification
-                    </Button>
-                  </span>
+              <div className="flex gap-2">
+                <Tooltip content="Refresh verifications" showTip={true}>
+                  <Button
+                    onClick={fetchVerifications}
+                    variant="outline"
+                    size="sm"
+                    disabled={isLoadingVerifications}
+                  >
+                    <RefreshCw
+                      className={`h-4 w-4 ${
+                        isLoadingVerifications ? "animate-spin" : ""
+                      }`}
+                    />
+                  </Button>
                 </Tooltip>
+                <Button
+                  onClick={handleStartVerification}
+                  variant="primary"
+                  size="sm"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  New Verification
+                </Button>
               </div>
             </div>
 
             {isLoadingVerifications ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-                <p className="mt-4 text-gray-500">Loading verifications...</p>
-              </div>
-            ) : verifications.length === 0 ? (
-              <div className="bg-gray-50 rounded-lg p-8 text-center">
-                <div className="mx-auto h-12 w-12 text-gray-400 mb-4">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No KYC Verifications Yet
-                </h3>
-                <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                  Complete your first KYC verification to participate in
-                  blockchain projects.
-                </p>
-                <Button
-                  onClick={() => router.push("/kyc/verify")}
-                  className="flex items-center"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Start Verification
-                </Button>
+              <div className="flex justify-center py-8">
+                <Loading text="Loading verifications..." />
               </div>
             ) : (
-              <div className="space-y-4">
-                <KycVerificationList
-                  verifications={verifications}
-                  onDelete={handleDeleteVerification}
-                />
-              </div>
+              <KycVerificationList
+                verifications={verifications}
+                onDelete={handleDeleteVerification}
+              />
             )}
           </div>
         </div>

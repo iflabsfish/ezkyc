@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, FormEvent, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { KycObject } from "@/types";
 import { Button } from "@/components/ui/Button";
@@ -15,105 +15,112 @@ import {
   ShieldCheck,
   Info,
 } from "lucide-react";
-import dynamic from 'next/dynamic';
+import dynamic from "next/dynamic";
 import type { SelfApp } from "@selfxyz/qrcode";
 import { getVerifierUrl } from "@/lib/api/env";
 import { useAuth } from "@/hooks/useAuth";
+import { useFlowValidation } from "@/hooks/useFlowValidation";
 import { isValidEVMAddress, isValidIronAddress } from "@/lib/utils/address";
+import { AddressType } from "@/types/address";
 
 const SelfQRcodeWrapper = dynamic(
-  () => import('@selfxyz/qrcode').then(mod => mod.default),
+  () => import("@selfxyz/qrcode").then((mod) => mod.default),
   { ssr: false }
 );
 
-interface KycVerificationFormProps { }
+interface KycVerificationFormProps {
+  flowId?: string | null;
+}
 
-export function KycVerificationForm() {
-  const [kycFlowId, setKycFlowId] = useState("");
+export function KycVerificationForm({
+  flowId: initialFlowId,
+}: KycVerificationFormProps) {
+  const [kycFlowId, setKycFlowId] = useState(initialFlowId || "");
   const [blockchainAddress, setBlockchainAddress] = useState("");
-  const [addressType, setAddressType] = useState<"evm" | "iron">("evm");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [flowDetails, setFlowDetails] = useState<KycObject | null>(null);
-  const [isLoadingFlow, setIsLoadingFlow] = useState(false);
-  const [flowError, setFlowError] = useState<string | null>(null);
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(initialFlowId ? 2 : 1); // Skip step 1 if flowId provided
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [selfApp, setSelfApp] = useState<SelfApp | null>(null);
   const { fetchWithToken } = useAuth();
   const { accountId } = useAuth();
   const router = useRouter();
 
+  const {
+    flowData: flowDetails,
+    isValidatingFlow: isLoadingFlow,
+    flowValidationStatus,
+    flowExists,
+    isFlowActive,
+  } = useFlowValidation(initialFlowId || kycFlowId || null);
+
+  const addressType: AddressType = flowDetails?.addressType || "evm";
+
+  const flowError =
+    flowValidationStatus === "invalid"
+      ? "Flow not found or has been deleted"
+      : flowValidationStatus === "inactive"
+      ? "Flow is not currently active"
+      : flowValidationStatus === "error"
+      ? "Error validating flow"
+      : null;
+
+  useEffect(() => {
+    if (flowValidationStatus === "valid" && currentStep === 1) {
+      setCurrentStep(2);
+    }
+  }, [flowValidationStatus, currentStep]);
+
   const handleFetchFlowDetails = async () => {
-    if (!kycFlowId.trim()) {
-      setFlowError("Please enter a KYC Flow ID");
-      setFlowDetails(null);
+    if (!kycFlowId?.trim()) {
+      setError("Please enter a KYC Flow ID");
       return;
     }
-
-    try {
-      setIsLoadingFlow(true);
-      setFlowError(null);
-
-      const response = await fetchWithToken(
-        `/api/kyc/get-flow?id=${encodeURIComponent(kycFlowId)}`
-      );
-      const data = await response?.json();
-
-      if (!response?.ok) {
-        throw new Error(data.message || "Failed to fetch KYC flow details");
-      }
-
-      setFlowDetails(data.flow);
-      setAddressType(data.flow.addressType);
-      setCurrentStep(2);
-    } catch (err) {
-      console.error("Error fetching KYC flow details:", err);
-      setFlowError(
-        err instanceof Error ? err.message : "Failed to load flow details"
-      );
-      setFlowDetails(null);
-    } finally {
-      setIsLoadingFlow(false);
-    }
   };
 
-  const handleSetBlockchainAddress = (value: string) => {
+  const validBlockchainAddress = useMemo(() => {
+    if (!blockchainAddress) return false;
     switch (addressType) {
       case "evm":
-        if (isValidEVMAddress(value)) {
-          setBlockchainAddress(value);
-        } else {
-          setError("Invalid EVM address");
-        }
-        break;
+        return isValidEVMAddress(blockchainAddress);
       case "iron":
-        if (isValidIronAddress(value)) {
-          setBlockchainAddress(value);
-        } else {
-          setError("Invalid Iron address");
-        }
-        break;
+        return isValidIronAddress(blockchainAddress);
       default:
-        setError("Invalid address");
+        return false;
     }
-  };
+  }, [blockchainAddress, addressType]);
+
+  useEffect(() => {
+    if (!blockchainAddress) {
+      setError(null);
+    } else if (!validBlockchainAddress) {
+      setError("Invalid blockchain address");
+    } else {
+      setError(null);
+    }
+  }, [blockchainAddress, validBlockchainAddress]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!kycFlowId.trim() || !blockchainAddress.trim()) {
+    const finalFlowId = kycFlowId || initialFlowId;
+    if (!finalFlowId?.trim() || !blockchainAddress.trim()) {
       setError("Please fill in all required fields");
       return;
     }
 
-    if (!flowDetails) {
-      setError("Please verify the KYC Flow ID first");
+    if (flowValidationStatus !== "valid" || !flowDetails) {
+      setError("Please verify the KYC Flow ID first and ensure it's active");
       return;
     }
 
     if (!accountId) {
       setError("Please sign in to continue");
+      return;
+    }
+
+    if (!blockchainAddress || !validBlockchainAddress) {
+      setError("Please enter a valid blockchain address");
       return;
     }
 
@@ -123,8 +130,8 @@ export function KycVerificationForm() {
 
       const qrcodeData = mapKycFlowToSelfAppParams(flowDetails, accountId);
 
-      if (typeof window !== 'undefined') {
-        const { SelfAppBuilder } = await import('@selfxyz/qrcode');
+      if (typeof window !== "undefined") {
+        const { SelfAppBuilder } = await import("@selfxyz/qrcode");
         const app = new SelfAppBuilder({
           ...qrcodeData,
         } as Partial<SelfApp>).build();
@@ -137,7 +144,7 @@ export function KycVerificationForm() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          kycFlowId,
+          kycFlowId: finalFlowId,
           blockchainAddress,
           qrcodeData: JSON.stringify(qrcodeData),
         }),
@@ -184,7 +191,7 @@ export function KycVerificationForm() {
               <SelfQRcodeWrapper
                 selfApp={selfApp}
                 onSuccess={() => {
-                  router.push('/user/dashboard');
+                  router.push("/user/dashboard");
                 }}
                 darkMode={false}
               />
@@ -212,10 +219,11 @@ export function KycVerificationForm() {
           <div className="flex items-center justify-between px-6">
             <div className="flex flex-col items-center">
               <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center ${currentStep >= 1
+                className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                  currentStep >= 1
                     ? "bg-indigo-600 text-white"
                     : "bg-gray-200 text-gray-500"
-                  }`}
+                }`}
               >
                 <FileText className="w-5 h-5" />
               </div>
@@ -223,16 +231,18 @@ export function KycVerificationForm() {
             </div>
 
             <div
-              className={`flex-1 h-1 mx-4 ${currentStep >= 2 ? "bg-indigo-600" : "bg-gray-200"
-                }`}
+              className={`flex-1 h-1 mx-4 ${
+                currentStep >= 2 ? "bg-indigo-600" : "bg-gray-200"
+              }`}
             ></div>
 
             <div className="flex flex-col items-center">
               <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center ${currentStep >= 2
+                className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                  currentStep >= 2
                     ? "bg-indigo-600 text-white"
                     : "bg-gray-200 text-gray-500"
-                  }`}
+                }`}
               >
                 <User className="w-5 h-5" />
               </div>
@@ -240,16 +250,18 @@ export function KycVerificationForm() {
             </div>
 
             <div
-              className={`flex-1 h-1 mx-4 ${currentStep >= 3 ? "bg-indigo-600" : "bg-gray-200"
-                }`}
+              className={`flex-1 h-1 mx-4 ${
+                currentStep >= 3 ? "bg-indigo-600" : "bg-gray-200"
+              }`}
             ></div>
 
             <div className="flex flex-col items-center">
               <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center ${currentStep >= 3
+                className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                  currentStep >= 3
                     ? "bg-indigo-600 text-white"
                     : "bg-gray-200 text-gray-500"
-                  }`}
+                }`}
               >
                 <CheckCircle2 className="w-5 h-5" />
               </div>
@@ -261,10 +273,9 @@ export function KycVerificationForm() {
         <div className="bg-blue-50 p-5 rounded-lg mb-8 flex items-start">
           <Info className="w-5 h-5 text-blue-500 mr-3 flex-shrink-0 mt-0.5" />
           <p className="text-blue-700 text-sm">
-            Enter the KYC Flow ID provided by the project and your blockchain
-            address to complete the verification process. All information is
-            securely protected and only disclosed according to project
-            requirements.
+            {initialFlowId
+              ? "Your blockchain address is required to complete the verification process. All information is securely protected."
+              : "Enter the KYC Flow ID provided by the project and your blockchain address to complete the verification process. All information is securely protected and only disclosed according to project requirements."}
           </p>
         </div>
 
@@ -275,8 +286,9 @@ export function KycVerificationForm() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {currentStep === 1 && (
+        <form onSubmit={handleSubmit}>
+          {/* Step 1: Enter Flow ID - only show if no initial flowId */}
+          {!initialFlowId && currentStep === 1 && (
             <div className="animate-fadeIn">
               <div>
                 <label
@@ -293,12 +305,13 @@ export function KycVerificationForm() {
                       type="text"
                       value={kycFlowId}
                       onChange={(e) => setKycFlowId(e.target.value)}
-                      className={`w-full pl-3 pr-10 py-2.5 border ${flowError ? "border-red-300" : "border-gray-300"
-                        } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200`}
+                      className={`w-full pl-3 pr-10 py-2.5 border ${
+                        flowError ? "border-red-300" : "border-gray-300"
+                      } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200`}
                       placeholder="Enter the KYC Flow ID provided by the project"
                       required
                     />
-                    {flowDetails && (
+                    {flowValidationStatus === "valid" && (
                       <CheckCircle2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-green-500" />
                     )}
                   </div>
@@ -332,59 +345,107 @@ export function KycVerificationForm() {
             </div>
           )}
 
-          {currentStep === 2 && flowDetails && (
-            <div className="animate-fadeIn">
-              <div className="bg-indigo-50 p-4 rounded-md border border-indigo-100 mb-6">
-                <h4 className="text-sm font-medium text-indigo-800 mb-2 flex items-center">
-                  <CheckCircle2 className="h-4 w-4 mr-1 text-green-500" />
-                  KYC Flow Verified
-                </h4>
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm">
-                    <span className="font-medium text-indigo-700 w-24">
-                      Project:
-                    </span>
-                    <span className="text-indigo-900">
-                      {flowDetails.projectName}
-                    </span>
-                  </div>
-                  <div className="flex items-center text-sm">
-                    <span className="font-medium text-indigo-700 w-24">
-                      Address Type:
-                    </span>
-                    <span className="text-indigo-900 whitespace-nowrap">
-                      {addressType === "evm" ? "EVM" : "Iron"}
-                    </span>
-                  </div>
-                  <div className="flex items-center text-sm">
-                    <span className="font-medium text-indigo-700 w-24">
-                      Start Date:
-                    </span>
-                    <span className="text-indigo-900 flex items-center">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {new Date(flowDetails.startDate).toLocaleDateString()}
-                    </span>
-                  </div>
-                  {flowDetails.endDate && (
-                    <div className="flex items-center text-sm">
-                      <span className="font-medium text-indigo-700 w-24">
-                        End Date:
-                      </span>
-                      <span className="text-indigo-900 flex items-center">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        {new Date(flowDetails.endDate).toLocaleDateString()}
-                      </span>
+          {/* Step 2: Enter Blockchain Address and Flow Details */}
+          {currentStep === 2 && (
+            <div className="space-y-8 animate-fadeIn">
+              {flowValidationStatus === "valid" && flowDetails && (
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-lg border border-green-200">
+                  <div className="flex items-start">
+                    <CheckCircle2 className="w-6 h-6 text-green-500 mr-3 flex-shrink-0 mt-1" />
+                    <div className="flex-grow">
+                      <h3 className="text-lg font-semibold text-green-800 mb-2">
+                        KYC Flow Verified & Active
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="font-medium text-green-700">
+                            Project:
+                          </span>
+                          <span className="ml-2 text-green-600">
+                            {flowDetails.projectName}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-medium text-green-700">
+                            Address Type:
+                          </span>
+                          <span className="ml-2 text-green-600">
+                            {addressType === "evm" ? "EVM" : "Iron"}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-medium text-green-700">
+                            Start Date:
+                          </span>
+                          <span className="ml-2 text-green-600">
+                            {new Date(
+                              flowDetails.startDate
+                            ).toLocaleDateString()}
+                          </span>
+                        </div>
+                        {flowDetails.endDate && (
+                          <div>
+                            <span className="font-medium text-green-700">
+                              End Date:
+                            </span>
+                            <span className="ml-2 text-green-600">
+                              {new Date(
+                                flowDetails.endDate
+                              ).toLocaleDateString()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {flowValidationStatus === "inactive" && flowDetails && (
+                <div className="bg-gradient-to-r from-yellow-50 to-amber-50 p-6 rounded-lg border border-yellow-200">
+                  <div className="flex items-start">
+                    <AlertCircle className="w-6 h-6 text-yellow-500 mr-3 flex-shrink-0 mt-1" />
+                    <div className="flex-grow">
+                      <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+                        KYC Flow Not Currently Active
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="font-medium text-yellow-700">
+                            Project:
+                          </span>
+                          <span className="ml-2 text-yellow-600">
+                            {flowDetails.projectName}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-medium text-yellow-700">
+                            Active Period:
+                          </span>
+                          <span className="ml-2 text-yellow-600">
+                            {new Date(
+                              flowDetails.startDate
+                            ).toLocaleDateString()}{" "}
+                            -{" "}
+                            {flowDetails.endDate
+                              ? new Date(
+                                  flowDetails.endDate
+                                ).toLocaleDateString()
+                              : "No end date"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label
                   htmlFor="blockchainAddress"
-                  className="block text-sm font-medium text-gray-700 mb-1 flex items-center"
+                  className="block text-sm font-medium text-gray-700 mb-2 flex items-center"
                 >
-                  <Search className="h-4 w-4 mr-1 text-indigo-500" />
+                  <User className="h-4 w-4 mr-1 text-indigo-500" />
                   Blockchain Address{" "}
                   <span className="text-red-500 ml-1">*</span>
                 </label>
@@ -392,21 +453,23 @@ export function KycVerificationForm() {
                   id="blockchainAddress"
                   type="text"
                   value={blockchainAddress}
-                  onChange={(e) => handleSetBlockchainAddress(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
-                  placeholder="Enter your blockchain address"
+                  onChange={(e) => setBlockchainAddress(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm 
+                    focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 
+                    transition-all duration-200 font-mono text-sm"
+                  placeholder="0x... or wallet address"
                   required
                 />
-                <p className="mt-1 text-sm text-gray-500">
-                  Enter the blockchain address you want to associate with this
-                  KYC verification
+                <p className="text-sm text-gray-500 mt-1">
+                  Enter the blockchain address you want to verify for this
+                  project
                 </p>
               </div>
             </div>
           )}
 
           <div className="pt-6 mt-6 border-t border-gray-200 flex justify-between">
-            {currentStep === 2 && (
+            {currentStep === 2 && !initialFlowId && (
               <>
                 <Button
                   type="button"
@@ -417,7 +480,11 @@ export function KycVerificationForm() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isLoading || !blockchainAddress.trim()}
+                  disabled={
+                    isLoading ||
+                    !blockchainAddress.trim() ||
+                    flowValidationStatus !== "valid"
+                  }
                   className="flex items-center"
                 >
                   {isLoading ? (
@@ -430,6 +497,29 @@ export function KycVerificationForm() {
                   )}
                 </Button>
               </>
+            )}
+
+            {currentStep === 2 && initialFlowId && (
+              <div className="w-full flex justify-end">
+                <Button
+                  type="submit"
+                  disabled={
+                    isLoading ||
+                    !blockchainAddress.trim() ||
+                    flowValidationStatus !== "valid"
+                  }
+                  className="flex items-center"
+                >
+                  {isLoading ? (
+                    <span className="flex items-center">
+                      <span className="h-4 w-4 mr-2 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
+                      Processing...
+                    </span>
+                  ) : (
+                    "Submit Verification"
+                  )}
+                </Button>
+              </div>
             )}
           </div>
         </form>
