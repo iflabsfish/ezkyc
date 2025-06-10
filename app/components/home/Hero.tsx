@@ -58,20 +58,11 @@ export function Hero({
   const { saveUser, isSavingUser } = useAuthUserContext();
   const isSavingUserRef = useStateRef(isSavingUser);
   const [isVisible, setIsVisible] = useState(false);
-  const [particleStyles, setParticleStyles] = useState<ParticleStyle[]>([]);
 
   const isFlowValidForRedirection = flowExists && isFlowActive;
 
   useEffect(() => {
     setIsVisible(true);
-    // Generate particle styles to avoid hydration mismatch
-    const particles = Array.from({ length: 20 }, () => ({
-      left: `${10 + Math.random() * 80}%`,
-      top: `${10 + Math.random() * 80}%`,
-      animationDelay: `${Math.random() * 8}s`,
-      animationDuration: `${6 + Math.random() * 8}s`,
-    }));
-    setParticleStyles(particles);
   }, []);
 
   useEffect(() => {
@@ -337,25 +328,6 @@ export function Hero({
           ))}
         </div>
 
-        {/* Enhanced floating particles with various sizes */}
-        {particleStyles.map((style, index) => (
-          <div
-            key={index}
-            className={`absolute rounded-full ${
-              index % 4 === 0
-                ? "w-2 h-2 bg-blue-400/40 shadow-sm shadow-blue-400/30"
-                : index % 4 === 1
-                ? "w-1 h-1 bg-blue-500/50 shadow-sm shadow-blue-500/40"
-                : index % 4 === 2
-                ? "w-1.5 h-1.5 bg-blue-600/45 shadow-sm shadow-blue-600/35"
-                : "w-0.5 h-0.5 bg-blue-700/60 shadow-sm shadow-blue-700/50"
-            } animate-float`}
-            style={{
-              ...style,
-            }}
-          />
-        ))}
-
         {/* Subtle grid pattern */}
         <div className="absolute inset-0 opacity-[0.03]">
           <div
@@ -414,38 +386,12 @@ export function Hero({
             </p>
           </div>
 
-          {/* Clean feature highlights */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="group bg-white/60 backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <div className="text-2xl font-bold text-blue-600 mb-2">
-                Zero Exposure
-              </div>
-              <div className="text-gray-600 font-medium">Personal Data</div>
-            </div>
-
-            <div className="group bg-white/60 backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <div className="text-2xl font-bold text-blue-700 mb-2">
-                Always Free
-              </div>
-              <div className="text-gray-600 font-medium">No Hidden Costs</div>
-            </div>
-
-            <div className="group bg-white/60 backdrop-blur-sm rounded-2xl p-8 border border-gray-200/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <div className="text-2xl font-bold text-blue-500 mb-2">
-                Instant
-              </div>
-              <div className="text-gray-600 font-medium">
-                Real-time Verification
-              </div>
-            </div>
-          </div>
-
           {/* CTA buttons - clean design */}
           <div className="pt-8">
             {renderButtonWithStatus()}
-            <p className="mt-6 text-sm text-gray-500">
+            {/* <p className="mt-6 text-sm text-gray-500">
               ✨ No credit card required • No signup fees • Start immediately
-            </p>
+            </p> */}
           </div>
 
           {/* Key features - minimal and elegant */}

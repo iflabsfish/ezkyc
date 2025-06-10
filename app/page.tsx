@@ -4,6 +4,7 @@ import { Hero } from "./components/home/Hero";
 import { IntroSection } from "./components/home/IntroSection";
 import { FeaturesGrid } from "./components/home/FeaturesGrid";
 import { HomeFooter } from "./components/home/HomeFooter";
+import { InteractiveDots } from "./components/home/InteractiveDots";
 import { useSearchParams } from "next/navigation";
 import { useFlowValidation } from "@/hooks/useFlowValidation";
 import { ArrowRight } from "lucide-react";
@@ -87,9 +88,12 @@ export default function Home() {
   }, [accountId, openAuthModal, router, flowId, isFlowValidForRedirection]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 relative">
+      {/* Interactive Dots Background - covers entire page */}
+      <InteractiveDots />
+
       {/* Simplified background */}
-      <div className="fixed inset-0 pointer-events-none">
+      <div className="fixed inset-0 pointer-events-none z-0">
         {/* Subtle gradient mesh */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/3 via-blue-400/2 to-blue-600/3"></div>
 

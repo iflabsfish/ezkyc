@@ -499,3 +499,12 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
 .animate-reverse-spin {
   animation: reverse-spin 15s linear infinite;
 }
+
+.dot-matrix {
+  will-change: transform, opacity;
+  transition: none;
+}
+
+.dot-matrix:hover {
+  transform: scale(1.1);
+}

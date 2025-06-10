@@ -127,7 +127,7 @@ export function FeaturesGrid() {
 
   return (
     <div
-      className={`w-full max-w-7xl mx-auto space-y-24 transition-all duration-1000 ${
+      className={`relative z-10 w-full max-w-7xl mx-auto space-y-24 transition-all duration-1000 ${
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
       }`}
     >
@@ -153,7 +153,9 @@ export function FeaturesGrid() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {/* Large featured cards */}
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="group relative bg-gradient-to-br from-blue-50/50 to-blue-100/30 rounded-3xl p-8 border border-blue-200/30 hover:border-blue-300/50 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 overflow-hidden">
+          <div className="group relative bg-gradient-to-br from-blue-70/50 to-blue-100/60 rounded-3xl p-8 border border-blue-200/30 hover:border-blue-300/50 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 overflow-hidden z-20">
+            {/* Background mask to block dots */}
+            <div className="absolute inset-0 bg-white/85 rounded-3xl"></div>
             <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-xl"></div>
             <div className="relative z-10">
               <div className="bg-gradient-to-r from-blue-500 to-blue-600 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-all duration-300 shadow-lg">
@@ -169,7 +171,9 @@ export function FeaturesGrid() {
             </div>
           </div>
 
-          <div className="group relative bg-gradient-to-br from-blue-50/50 to-blue-100/30 rounded-3xl p-8 border border-blue-200/30 hover:border-blue-300/50 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 overflow-hidden">
+          <div className="group relative bg-gradient-to-br from-blue-50/50 to-blue-100/30 rounded-3xl p-8 border border-blue-200/30 hover:border-blue-300/50 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 overflow-hidden z-20">
+            {/* Background mask to block dots */}
+            <div className="absolute inset-0 bg-white/85 rounded-3xl"></div>
             <div className="absolute bottom-0 left-0 w-20 h-20 bg-blue-600/10 rounded-full blur-xl"></div>
             <div className="relative z-10">
               <div className="bg-gradient-to-r from-blue-600 to-blue-700 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-all duration-300 shadow-lg">
@@ -185,7 +189,9 @@ export function FeaturesGrid() {
             </div>
           </div>
 
-          <div className="group relative bg-gradient-to-br from-blue-50/50 to-blue-100/30 rounded-3xl p-8 border border-blue-200/30 hover:border-blue-300/50 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 overflow-hidden">
+          <div className="group relative bg-gradient-to-br from-blue-50/50 to-blue-100/30 rounded-3xl p-8 border border-blue-200/30 hover:border-blue-300/50 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 overflow-hidden z-20">
+            {/* Background mask to block dots */}
+            <div className="absolute inset-0 bg-white/85 rounded-3xl"></div>
             <div className="absolute top-1/2 right-0 w-16 h-16 bg-blue-400/10 rounded-full blur-lg"></div>
             <div className="relative z-10">
               <div className="bg-gradient-to-r from-blue-400 to-blue-500 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-all duration-300 shadow-lg">
@@ -201,7 +207,9 @@ export function FeaturesGrid() {
             </div>
           </div>
 
-          <div className="group relative bg-gradient-to-br from-blue-50/50 to-blue-100/30 rounded-3xl p-8 border border-blue-200/30 hover:border-blue-300/50 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 overflow-hidden">
+          <div className="group relative bg-gradient-to-br from-blue-50/50 to-blue-100/30 rounded-3xl p-8 border border-blue-200/30 hover:border-blue-300/50 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 overflow-hidden z-20">
+            {/* Background mask to block dots */}
+            <div className="absolute inset-0 bg-white/85 rounded-3xl"></div>
             <div className="absolute top-0 left-1/2 w-18 h-18 bg-blue-500/10 rounded-full blur-lg"></div>
             <div className="relative z-10">
               <div className="bg-gradient-to-r from-blue-500 to-blue-600 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-all duration-300 shadow-lg">
@@ -219,8 +227,9 @@ export function FeaturesGrid() {
         </div>
 
         {/* Featured tall card */}
-        <div className="group relative bg-gradient-to-b from-blue-50 via-blue-100/50 to-blue-50 rounded-3xl p-10 border border-blue-200/30 hover:border-blue-300/50 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-400/5 to-transparent"></div>
+        <div className="group relative bg-gradient-to-b from-blue-50 via-blue-100/50 to-blue-50 rounded-3xl p-10 border border-blue-200/30 hover:border-blue-300/50 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 overflow-hidden z-20">
+          {/* Background mask to block dots */}
+          <div className="absolute inset-0 bg-white/85 rounded-3xl"></div>
           <div className="absolute top-0 right-0 w-32 h-32 border border-blue-200/20 rounded-full transform translate-x-16 -translate-y-16"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 border border-blue-200/20 rounded-full transform -translate-x-12 translate-y-12"></div>
 
@@ -282,7 +291,9 @@ export function FeaturesGrid() {
 
         {/* Bottom row */}
         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="group relative bg-gradient-to-br from-blue-50/50 to-blue-100/30 rounded-3xl p-8 border border-blue-200/30 hover:border-blue-300/50 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 overflow-hidden">
+          <div className="group relative bg-gradient-to-br from-blue-50/50 to-blue-100/30 rounded-3xl p-8 border border-blue-200/30 hover:border-blue-300/50 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 overflow-hidden z-20">
+            {/* Background mask to block dots */}
+            <div className="absolute inset-0 bg-white/85 rounded-3xl"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-500/10 rounded-full blur-xl"></div>
             <div className="relative z-10">
               <div className="bg-gradient-to-r from-blue-500 to-blue-700 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-all duration-300 shadow-lg">
@@ -298,7 +309,9 @@ export function FeaturesGrid() {
             </div>
           </div>
 
-          <div className="group relative bg-gradient-to-br from-blue-50/50 to-blue-100/30 rounded-3xl p-8 border border-blue-200/30 hover:border-blue-300/50 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 overflow-hidden">
+          <div className="group relative bg-gradient-to-br from-blue-50/50 to-blue-100/30 rounded-3xl p-8 border border-blue-200/30 hover:border-blue-300/50 transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 overflow-hidden z-20">
+            {/* Background mask to block dots */}
+            <div className="absolute inset-0 bg-white/85 rounded-3xl"></div>
             <div className="absolute top-1/2 right-0 w-20 h-20 bg-blue-700/10 rounded-full blur-xl"></div>
             <div className="relative z-10">
               <div className="bg-gradient-to-r from-blue-600 to-blue-800 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-all duration-300 shadow-lg">
