@@ -40,14 +40,14 @@ export function DatePicker({
       )}
       <div
         className={`relative rounded-md ${
-          isFocused ? "ring-2 ring-indigo-100" : ""
+          isFocused ? "ring-2 ring-blue-100" : ""
         } cursor-pointer`}
         onClick={handleContainerClick}
       >
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
           <Calendar
             className={`h-5 w-5 ${
-              isFocused ? "text-indigo-500" : "text-gray-400"
+              isFocused ? "text-blue-500" : "text-gray-400"
             } transition-colors duration-200`}
           />
         </div>
@@ -56,7 +56,7 @@ export function DatePicker({
           type="date"
           className={`
             block w-full pl-12 rounded-md border-gray-300 
-            focus:border-indigo-500 focus:ring-0 text-base
+            focus:border-blue-500 focus:ring-0 text-base
             py-3 px-4
             transition-all duration-200 ease-in-out
             hover:border-gray-400
@@ -66,7 +66,7 @@ export function DatePicker({
               error
                 ? "border-red-300 text-red-900 placeholder-red-300 focus:border-red-500 focus:ring-red-500"
                 : isFocused
-                ? "border-indigo-400"
+                ? "border-blue-400"
                 : ""
             }
             ${className}

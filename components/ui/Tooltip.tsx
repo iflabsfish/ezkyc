@@ -11,7 +11,9 @@ export function Tooltip({
   showTip: boolean;
 }) {
   const [show, setShow] = useState(false);
-  const [coords, setCoords] = useState<{ left: number; top: number } | null>(null);
+  const [coords, setCoords] = useState<{ left: number; top: number } | null>(
+    null
+  );
   const [tooltipSize, setTooltipSize] = useState<{
     width: number;
     height: number;
@@ -29,7 +31,7 @@ export function Tooltip({
       const rect = ref.current.getBoundingClientRect();
       setCoords({
         left: rect.left + rect.width / 2,
-        top: rect.bottom,
+        top: rect.bottom + 8,
       });
     }
   }, [show]);
@@ -42,8 +44,8 @@ export function Tooltip({
   }, [show, content]);
 
   const { left, top } = useMemo(() => {
-    if (typeof window === 'undefined') return { left: 0, top: 0 };
-    
+    if (typeof window === "undefined") return { left: 0, top: 0 };
+
     let left = coords?.left ?? 0;
     let top = coords?.top ?? 0;
     if (tooltipSize) {
@@ -54,7 +56,7 @@ export function Tooltip({
         left = window.innerWidth - tooltipSize.width / 2 - padding;
       }
       if (top + tooltipSize.height > window.innerHeight - padding) {
-        top = top - tooltipSize.height - (ref.current?.offsetHeight || 0) - 8;
+        top = top - tooltipSize.height - (ref.current?.offsetHeight || 0) - 16;
       }
       if (top < padding) {
         top = padding;
@@ -81,8 +83,8 @@ export function Tooltip({
       {showTip &&
         show &&
         coords &&
-        typeof document !== 'undefined' &&
-        typeof window !== 'undefined' &&
+        typeof document !== "undefined" &&
+        typeof window !== "undefined" &&
         createPortal(
           <span
             ref={tooltipRef}

@@ -7,7 +7,7 @@ import {
   useSignerStatus,
   useUser,
 } from "@account-kit/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useStateRef } from "@/hooks/useDataRef";
 import { useUserInfo } from "@/hooks";
@@ -24,36 +24,46 @@ export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const hasAttemptedLoginRef = useRef(false);
   const { account, accountType, isLoading } = useUserInfo();
   const { setTokenAndAccountId, setUserInfo, saveUser, isSavingUser } =
     useAuthUserContext();
   const isSavingUserRef = useStateRef(isSavingUser);
 
+  // Get flowId parameter from current page URL
+  const flowId = searchParams?.get("flowId") || null;
+
   useEffect(() => {
-    if (user && hasAttemptedLoginRef.current && !isSavingUserRef) {
+    if (user && hasAttemptedLoginRef.current && !isSavingUserRef.current) {
       saveUser(user)
         .then(() => {
-          router.push("/destinations");
+          const destinationUrl = flowId
+            ? `/destinations?flowId=${encodeURIComponent(flowId)}`
+            : "/destinations";
+          router.push(destinationUrl);
         })
         .catch((err) => {
           console.error(err);
         });
     }
-  }, [user, hasAttemptedLoginRef, isSavingUserRef, saveUser]);
+  }, [user, hasAttemptedLoginRef, isSavingUserRef, saveUser, router, flowId]);
 
   const handleSignIn = useCallback(() => {
     if (accountId) {
-      router.push("/destinations");
+      const destinationUrl = flowId
+        ? `/destinations?flowId=${encodeURIComponent(flowId)}`
+        : "/destinations";
+      router.push(destinationUrl);
     } else {
       openAuthModal();
       hasAttemptedLoginRef.current = true;
     }
-  }, [accountId, router, openAuthModal, hasAttemptedLoginRef]);
+  }, [accountId, router, openAuthModal, hasAttemptedLoginRef, flowId]);
 
   useEffect(() => {
-    if (typeof document === 'undefined') return;
-    
+    if (typeof document === "undefined") return;
+
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setMenuOpen(false);
@@ -93,9 +103,9 @@ export function Header() {
 
   if (signerStatus.isInitializing) {
     return (
-      <header className="sticky top-0 z-50 py-4 px-6 bg-gradient-to-r from-indigo-50 via-white to-blue-50 shadow-sm border-b border-indigo-200 backdrop-blur-md bg-opacity-90">
+      <header className="sticky top-0 z-50 py-4 px-6 bg-gradient-to-r from-blue-50 via-white to-blue-50 shadow-sm border-b border-blue-200 backdrop-blur-md bg-opacity-90">
         <div className="container mx-auto flex justify-between items-center">
-          <div className="font-extrabold text-2xl tracking-widest text-indigo-700 drop-shadow-sm">
+          <div className="font-extrabold text-2xl tracking-widest text-blue-700 drop-shadow-sm">
             EZKYC
           </div>
           <div className="animate-pulse bg-gray-200 rounded-full h-8 w-20"></div>
@@ -105,9 +115,9 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 py-4 px-6 bg-gradient-to-r from-indigo-50 via-white to-blue-50 shadow-sm border-b border-indigo-200 backdrop-blur-md bg-opacity-90">
+    <header className="sticky top-0 z-50 py-4 px-6 bg-gradient-to-r from-blue-50 via-white to-blue-50 shadow-sm border-b border-blue-200 backdrop-blur-md bg-opacity-90">
       <div className="container mx-auto flex justify-between items-center">
-        <div className="font-extrabold text-2xl tracking-widest text-indigo-700 drop-shadow-sm">
+        <div className="font-extrabold text-2xl tracking-widest text-blue-700 drop-shadow-sm">
           EZKYC
         </div>
 
@@ -132,7 +142,7 @@ export function Header() {
                         />
                       </div>
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white font-medium mr-2">
+                      <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium mr-2">
                         {account.name
                           ? account.name.charAt(0).toUpperCase()
                           : "A"}
@@ -142,7 +152,7 @@ export function Header() {
                   </>
                 ) : (
                   <>
-                    <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white font-medium mr-2">
+                    <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium mr-2">
                       {user.email ? user.email.charAt(0).toUpperCase() : "A"}
                     </div>
                     <span className="font-medium">
@@ -249,8 +259,8 @@ export function Header() {
         ) : (
           <button
             onClick={handleSignIn}
-            className="px-6 py-2.5 bg-indigo-600 text-white rounded-full hover:bg-indigo-700
-              font-medium transition-all duration-200 hover:shadow-md active:scale-95"
+            className="px-6 py-2.5 bg-blue-600 text-white rounded-full hover:bg-blue-700
+              font-medium transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl"
           >
             Sign In
           </button>

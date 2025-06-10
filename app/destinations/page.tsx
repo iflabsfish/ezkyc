@@ -11,7 +11,7 @@ export default function DestinationsPage() {
   const { accountId } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const flowId = searchParams?.get('flowId') || null;
+  const flowId = searchParams?.get("flowId") || null;
   const { isLoading, account, accountType, error } = useUserInfo();
 
   const shouldAutoSelectUser = useMemo(() => {
@@ -27,7 +27,7 @@ export default function DestinationsPage() {
 
     if (!isLoading && account) {
       if (accountType === "user") {
-        const dashboardUrl = flowId 
+        const dashboardUrl = flowId
           ? `/user/dashboard?flowId=${encodeURIComponent(flowId)}`
           : "/user/dashboard";
         router.push(dashboardUrl);
@@ -38,17 +38,25 @@ export default function DestinationsPage() {
     }
 
     if (shouldAutoSelectUser) {
-      const userPageUrl = flowId 
+      const userPageUrl = flowId
         ? `/user?flowId=${encodeURIComponent(flowId)}`
         : "/user";
       router.push(userPageUrl);
     }
-  }, [accountId, isLoading, account, accountType, router, flowId, shouldAutoSelectUser]);
+  }, [
+    accountId,
+    isLoading,
+    account,
+    accountType,
+    router,
+    flowId,
+    shouldAutoSelectUser,
+  ]);
 
   // If the user is not logged in or information is loading, do not display content
   if (!accountId || isLoading) {
     return (
-      <div className="flex flex-col min-h-screen bg-gradient-to-b from-indigo-50 to-white">
+      <div className="flex flex-col min-h-screen bg-gradient-to-b from-blue-50 to-white">
         <Header />
         <main className="flex-grow container mx-auto px-4 py-16 flex items-center justify-center">
           {isLoading && <Loading text="Loading..." />}
@@ -60,7 +68,7 @@ export default function DestinationsPage() {
 
   if (shouldAutoSelectUser) {
     return (
-      <div className="flex flex-col min-h-screen bg-gradient-to-b from-indigo-50 to-white">
+      <div className="flex flex-col min-h-screen bg-gradient-to-b from-blue-50 to-white">
         <Header />
         <main className="flex-grow container mx-auto px-4 py-16 flex items-center justify-center">
           <Loading text="Setting up your account..." />
@@ -70,14 +78,29 @@ export default function DestinationsPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex flex-col min-h-screen bg-gradient-to-b from-blue-50 to-white">
+        <Header />
+        <main className="flex-grow container mx-auto px-4 py-16 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Error</h1>
+            <p className="text-gray-600 mb-4">{error}</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-indigo-50 to-white">
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <Header />
       <main className="flex-grow container mx-auto px-4 py-16 flex flex-col justify-center">
         <div className="flex flex-col items-center justify-center space-y-12 text-center">
           <h1 className="text-3xl font-bold text-gray-900">
             Welcome,{" "}
-            <span className="text-indigo-600">
+            <span className="text-blue-600">
               {account?.name || "Anonymous User"}
             </span>
           </h1>

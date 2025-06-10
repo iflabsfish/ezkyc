@@ -10,7 +10,7 @@ import { User as UserType } from "@/types";
 export default function UserPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const flowId = searchParams?.get('flowId') || null;
+  const flowId = searchParams?.get("flowId") || null;
   const { accountId } = useAuth();
   const { fetchWithToken } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -73,7 +73,7 @@ export default function UserPage() {
           accountType: "user",
         });
 
-        const dashboardUrl = flowId 
+        const dashboardUrl = flowId
           ? `/user/dashboard?flowId=${encodeURIComponent(flowId)}`
           : "/user/dashboard";
         router.push(dashboardUrl);
@@ -103,18 +103,22 @@ export default function UserPage() {
             {flowId && (
               <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                 <p className="text-green-700 text-sm">
-                  You&apos;ll be automatically set up for KYC verification after completing your profile.
+                  You&apos;ll be automatically set up for KYC verification after
+                  completing your profile.
                 </p>
               </div>
             )}
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-            <div className="bg-indigo-600 px-6 py-4">
+            <div className="bg-blue-600 px-6 py-4">
               <h2 className="text-xl font-medium text-white flex items-center">
                 <User className="w-5 h-5 mr-2" />
-                Personal Information
+                Individual User Registration
               </h2>
+              <p className="text-blue-100 mt-1 text-sm">
+                Create your personal account for KYC verification
+              </p>
             </div>
 
             {error && (
@@ -130,7 +134,7 @@ export default function UserPage() {
                   htmlFor="username"
                   className="block text-sm font-medium text-gray-700 mb-1 flex items-center"
                 >
-                  <User className="h-4 w-4 mr-1 text-indigo-500" />
+                  <User className="h-4 w-4 mr-1 text-blue-500" />
                   Full Name <span className="text-red-500 ml-1">*</span>
                 </label>
                 <input
@@ -139,7 +143,7 @@ export default function UserPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm 
-                    focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 
+                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
                     transition-all duration-200"
                   placeholder="Enter your full name"
                   required
@@ -154,8 +158,9 @@ export default function UserPage() {
                   htmlFor="email"
                   className="block text-sm font-medium text-gray-700 mb-1 flex items-center"
                 >
-                  <Mail className="h-4 w-4 mr-1 text-indigo-500" />
-                  Email Address <span className="text-gray-400 ml-1">(Optional)</span>
+                  <Mail className="h-4 w-4 mr-1 text-blue-500" />
+                  Email Address{" "}
+                  <span className="text-gray-400 ml-1">(Optional)</span>
                 </label>
                 <input
                   id="email"
@@ -163,12 +168,13 @@ export default function UserPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-md shadow-sm 
-                    focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 
+                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
                     transition-all duration-200"
                   placeholder="Enter your email address (optional)"
                 />
                 <p className="text-sm text-gray-500 mt-1">
-                  Optional: We&apos;ll use this for account recovery and notifications
+                  Optional: We&apos;ll use this for account recovery and
+                  notifications
                 </p>
               </div>
 
@@ -176,8 +182,8 @@ export default function UserPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-indigo-600 text-white px-4 py-3 rounded-md font-medium
-                    hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 
+                  className="w-full bg-blue-600 text-white px-4 py-3 rounded-md font-medium
+                    hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 
                     focus:ring-offset-2 transition-all duration-200 flex items-center justify-center
                     disabled:opacity-50 disabled:cursor-not-allowed"
                 >

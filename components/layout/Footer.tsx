@@ -10,7 +10,7 @@ export function Footer() {
             href="https://self.xyz/"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-medium text-indigo-600 hover:text-indigo-500 hover:underline"
+            className="font-medium text-blue-600 hover:text-blue-500 hover:underline"
           >
             Self
           </Link>
