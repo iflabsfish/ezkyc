@@ -176,7 +176,7 @@ export default async function handler(
       "ezkyc",
       getApiUrl(),
       "uuid",
-      true
+      enableMockPassport(),
     );
 
     if (minimumAge !== undefined) {
