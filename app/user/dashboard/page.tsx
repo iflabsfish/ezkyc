@@ -16,7 +16,7 @@ import { useFlowValidation } from "@/hooks/useFlowValidation";
 export default function UserDashboard() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const flowId = searchParams?.get('flowId') || null;
+  const flowId = searchParams?.get("flowId") || null;
   const { accountId } = useAuth();
   const { userInfo } = useAuthUserContext();
   const [verifications, setVerifications] = useState<
@@ -26,12 +26,8 @@ export default function UserDashboard() {
   const [isCheckingFlow, setIsCheckingFlow] = useState(false);
   const { fetchWithToken } = useAuth();
 
-  const {
-    flowData,
-    flowValidationStatus,
-    isFlowActive,
-    flowExists
-  } = useFlowValidation(flowId);
+  const { flowData, flowValidationStatus, isFlowActive, flowExists } =
+    useFlowValidation(flowId);
 
   const fetchVerifications = useCallback(async () => {
     if (!accountId) return;
@@ -56,30 +52,38 @@ export default function UserDashboard() {
   const checkAndStartKycFlow = useCallback(async () => {
     if (!flowId || !accountId) return;
 
-    if (flowValidationStatus !== 'valid') {
-      console.log('Flow is not valid or active, skipping auto-start');
+    if (flowValidationStatus !== "valid") {
+      console.log("Flow is not valid or active, skipping auto-start");
       return;
     }
 
     try {
       setIsCheckingFlow(true);
 
-      const hasPendingVerification = verifications.some(v => v.status === 'pending');
+      const hasPendingVerification = verifications.some(
+        (v) => v.status === "pending"
+      );
       if (hasPendingVerification) {
-        console.log('User already has pending verification, skipping auto-start');
+        console.log(
+          "User already has pending verification, skipping auto-start"
+        );
         return;
       }
 
-      const hasParticipatedInFlow = verifications.some(v => v.kycFlowId === flowId);
+      const hasParticipatedInFlow = verifications.some(
+        (v) => v.kycFlowId === flowId
+      );
       if (hasParticipatedInFlow) {
-        console.log('User already participated in this flow, skipping auto-start');
+        console.log(
+          "User already participated in this flow, skipping auto-start"
+        );
         return;
       }
 
       const verifyUrl = `/kyc/verify?flowId=${encodeURIComponent(flowId)}`;
       router.push(verifyUrl);
     } catch (error) {
-      console.error('Error checking flow for auto-start:', error);
+      console.error("Error checking flow for auto-start:", error);
     } finally {
       setIsCheckingFlow(false);
     }
@@ -100,10 +104,21 @@ export default function UserDashboard() {
   }, [accountId, userInfo, router, fetchVerifications]);
 
   useEffect(() => {
-    if (flowId && !isLoadingVerifications && verifications.length >= 0 && flowValidationStatus !== 'loading') {
+    if (
+      flowId &&
+      !isLoadingVerifications &&
+      verifications.length >= 0 &&
+      flowValidationStatus !== "loading"
+    ) {
       checkAndStartKycFlow();
     }
-  }, [flowId, isLoadingVerifications, verifications, flowValidationStatus, checkAndStartKycFlow]);
+  }, [
+    flowId,
+    isLoadingVerifications,
+    verifications,
+    flowValidationStatus,
+    checkAndStartKycFlow,
+  ]);
 
   const handleDeleteVerification = useCallback((verificationId: string) => {
     setVerifications((prev) =>
@@ -142,11 +157,16 @@ export default function UserDashboard() {
   }
 
   const handleStartVerification = () => {
-    const verifyUrl = flowId 
+    const verifyUrl = flowId
       ? `/kyc/verify?flowId=${encodeURIComponent(flowId)}`
       : "/kyc/verify";
     router.push(verifyUrl);
   };
+
+  // Check if there's any pending verification
+  const hasPendingVerification = verifications.some(
+    (v) => v.status === "pending"
+  );
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-indigo-50 to-white">
@@ -169,52 +189,83 @@ export default function UserDashboard() {
                 )}
               </div>
             </div>
-            
+
             {flowId && (
-              <div className={`mb-4 p-4 rounded-lg border ${
-                flowValidationStatus === 'valid' ? 'bg-blue-50 border-blue-200' :
-                flowValidationStatus === 'inactive' ? 'bg-yellow-50 border-yellow-200' :
-                flowValidationStatus === 'invalid' ? 'bg-red-50 border-red-200' :
-                flowValidationStatus === 'loading' ? 'bg-gray-50 border-gray-200' :
-                'bg-gray-50 border-gray-200'
-              }`}>
+              <div
+                className={`mb-4 p-4 rounded-lg border ${
+                  flowValidationStatus === "valid"
+                    ? "bg-blue-50 border-blue-200"
+                    : flowValidationStatus === "inactive"
+                    ? "bg-yellow-50 border-yellow-200"
+                    : flowValidationStatus === "invalid"
+                    ? "bg-red-50 border-red-200"
+                    : flowValidationStatus === "loading"
+                    ? "bg-gray-50 border-gray-200"
+                    : "bg-gray-50 border-gray-200"
+                }`}
+              >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className={`font-medium ${
-                      flowValidationStatus === 'valid' ? 'text-blue-700' :
-                      flowValidationStatus === 'inactive' ? 'text-yellow-700' :
-                      flowValidationStatus === 'invalid' ? 'text-red-700' :
-                      'text-gray-700'
-                    }`}>
-                      {flowValidationStatus === 'valid' ? 'Quick Verification Available' :
-                       flowValidationStatus === 'inactive' ? 'Flow Not Currently Active' :
-                       flowValidationStatus === 'invalid' ? 'Invalid Flow' :
-                       flowValidationStatus === 'loading' ? 'Validating Flow...' :
-                       'Flow Validation'}
+                    <p
+                      className={`font-medium ${
+                        flowValidationStatus === "valid"
+                          ? "text-blue-700"
+                          : flowValidationStatus === "inactive"
+                          ? "text-yellow-700"
+                          : flowValidationStatus === "invalid"
+                          ? "text-red-700"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      {flowValidationStatus === "valid"
+                        ? "Quick Verification Available"
+                        : flowValidationStatus === "inactive"
+                        ? "Flow Not Currently Active"
+                        : flowValidationStatus === "invalid"
+                        ? "Invalid Flow"
+                        : flowValidationStatus === "loading"
+                        ? "Validating Flow..."
+                        : "Flow Validation"}
                     </p>
-                    <p className={`text-sm ${
-                      flowValidationStatus === 'valid' ? 'text-blue-600' :
-                      flowValidationStatus === 'inactive' ? 'text-yellow-600' :
-                      flowValidationStatus === 'invalid' ? 'text-red-600' :
-                      'text-gray-600'
-                    }`}>
+                    <p
+                      className={`text-sm ${
+                        flowValidationStatus === "valid"
+                          ? "text-blue-600"
+                          : flowValidationStatus === "inactive"
+                          ? "text-yellow-600"
+                          : flowValidationStatus === "invalid"
+                          ? "text-red-600"
+                          : "text-gray-600"
+                      }`}
+                    >
                       Flow ID: {flowId}
                       {flowData && (
                         <span className="block mt-1">
                           Project: {flowData.projectName}
-                          {flowValidationStatus === 'inactive' && (
+                          {flowValidationStatus === "inactive" && (
                             <span className="block">
-                              Active: {new Date(flowData.startDate).toLocaleDateString()} - {
-                                flowData.endDate ? new Date(flowData.endDate).toLocaleDateString() : 'No end date'
-                              }
+                              Active:{" "}
+                              {new Date(
+                                flowData.startDate
+                              ).toLocaleDateString()}{" "}
+                              -{" "}
+                              {flowData.endDate
+                                ? new Date(
+                                    flowData.endDate
+                                  ).toLocaleDateString()
+                                : "No end date"}
                             </span>
                           )}
                         </span>
                       )}
                     </p>
                   </div>
-                  {flowValidationStatus === 'valid' && (
-                    <Button onClick={handleStartVerification} variant="primary" size="sm">
+                  {flowValidationStatus === "valid" && (
+                    <Button
+                      onClick={handleStartVerification}
+                      variant="primary"
+                      size="sm"
+                    >
                       Start Verification
                     </Button>
                   )}
@@ -243,14 +294,26 @@ export default function UserDashboard() {
                     />
                   </Button>
                 </Tooltip>
-                <Button
-                  onClick={handleStartVerification}
-                  variant="primary"
-                  size="sm"
+                <Tooltip
+                  content={
+                    hasPendingVerification
+                      ? "You have a pending verification. Please complete or delete it before starting a new one."
+                      : "Start a new KYC verification"
+                  }
+                  showTip={true}
                 >
-                  <Plus className="h-4 w-4 mr-1" />
-                  New Verification
-                </Button>
+                  <div>
+                    <Button
+                      onClick={handleStartVerification}
+                      variant="primary"
+                      size="sm"
+                      disabled={hasPendingVerification}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      New Verification
+                    </Button>
+                  </div>
+                </Tooltip>
               </div>
             </div>
 

@@ -41,11 +41,11 @@ export const config = createConfig(
     transport: alchemy({ apiKey: ALCHEMY_API_KEY }),
     chain: sepolia,
     ssr: true, // more about ssr: https://accountkit.alchemy.com/react/ssr
-    storage: cookieStorage, // 启用 cookieStorage 以持久化登录状态
+    storage: cookieStorage, // Enable cookieStorage to persist login state
     enablePopupOauth: true, // must be set to "true" if you plan on using popup rather than redirect in the social login flow
-    // 配置会话超时时间（可选）
     sessionConfig: {
-      expirationTimeMs: 60 * 60 * 1000, // 1小时，默认是15分钟
+      // Configure session timeout (optional)
+      expirationTimeMs: 60 * 60 * 1000, // 1 hour, default is 15 minutes
     },
   },
   uiConfig

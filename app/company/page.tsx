@@ -93,7 +93,7 @@ export default function CompanyPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-indigo-50 to-white">
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <Header />
       <main className="flex-grow container mx-auto px-4 py-12 md:py-20">
         <div className="max-w-2xl mx-auto">
@@ -108,7 +108,7 @@ export default function CompanyPage() {
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-            <div className="bg-indigo-600 px-6 py-4">
+            <div className="bg-blue-600 px-6 py-4">
               <h2 className="text-xl font-medium text-white flex items-center">
                 <Building2 className="w-5 h-5 mr-2" />
                 Company Information
@@ -137,7 +137,8 @@ export default function CompanyPage() {
                         type="text"
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
-                        className="block w-full pl-10 px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-500 
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Enter your company name"
                         required
                       />
@@ -156,7 +157,8 @@ export default function CompanyPage() {
                         type="url"
                         value={website}
                         onChange={(e) => setWebsite(e.target.value)}
-                        className="block w-full pl-10 px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-500 
+                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="https://example.com"
                       />
                     </div>
@@ -170,7 +172,7 @@ export default function CompanyPage() {
                       <div className="flex-1">
                         <label
                           htmlFor="logo-upload"
-                          className="flex justify-center items-center px-6 py-3 border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition-all duration-200"
+                          className="flex justify-center items-center px-6 py-3 border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all duration-200"
                         >
                           <ImagePlus className="w-5 h-5 text-gray-400 mr-2" />
                           <span className="text-sm text-gray-500">
@@ -205,9 +207,9 @@ export default function CompanyPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 
-                    focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 
-                    disabled:opacity-50 transition-all duration-200 flex items-center justify-center"
+                    className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700
+                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                      disabled:opacity-50 transition-all duration-200 flex items-center justify-center"
                   >
                     {loading ? (
                       <>
